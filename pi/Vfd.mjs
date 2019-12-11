@@ -109,6 +109,7 @@ export default class Vdf {
   }
   // this.setKerning = size0to3 =>
   setKerning(size0to3) {
+    // Looking for font size? There's a magnification concept. Default is smallest, so meh.
     // 0: Fixed Font Size with 1 dot space
     // 1: Fixed Font Size with 2 dot space
     // 2: Proportional Font Size with 1 dot space (narrowest)
