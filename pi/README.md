@@ -51,6 +51,7 @@ It's yet more oauth2 fuckery, and might lose tokens in the heat of it
 :: JUST DO THIS SIMPLE ONE INNIT ::
 
 Pi serves a page
+Poss give an ngrok link so no need of same wifi
 New tab auth url (always same)
 Redirect to static site that just echos it like 'hey, copy this'
 Paste back in pi page
@@ -61,7 +62,6 @@ Easy
 No storage
 
 Cons:
-'go to 192.158.3.21' on same wifi
 If device goes off for an hour, it'll need re-auth
 
 REASONING fOR tO Do ThIs OnE:
