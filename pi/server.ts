@@ -2,6 +2,8 @@ const fs = require("fs");
 const http = require("http");
 const ip = require("ip");
 const port = 55;
+const serverIndex = fs.readFileSync("./server-index.html", "utf8");
+const serverThanks = fs.readFileSync("./server-thanks.html", "utf8");
 
 // Start ngrok service for our http server
 const ngrok = require("ngrok");
@@ -18,17 +20,22 @@ const ngrok = require("ngrok");
   console.error("Error", e);
 });
 
+// Serving HTML and listening for gold
 const requestHandler = (request, response) => {
+  if (request.url === "/favicon.ico") return; // does my head in
   console.log("Request:", request.url);
   const { url } = request;
   if (url.startsWith(`/?authToken=`)) {
     let token = url.replace("/?authToken=", "");
     if (token) {
       console.log("Sick, a token was submitted:", token);
+      // Save it to disk
+
+      // Let the app proper know about it
+      response.end(serverThanks);
     }
   }
-  const serverHtml = fs.readFileSync("./server.html", "utf8");
-  response.end(serverHtml);
+  response.end(serverIndex);
 };
 
 // Start http server
