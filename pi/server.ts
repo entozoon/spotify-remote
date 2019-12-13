@@ -3,12 +3,19 @@ const http = require("http");
 const ngrok = require("ngrok");
 const ip = require("ip");
 const port = 55;
-const serverIndex = fs.readFileSync("./server-index.html", "utf8");
 const EventEmitter = require("events");
 
 export default class extends EventEmitter {
-  constructor() {
+  constructor({ spotifyCredentials, spotify }) {
     super();
+    const { clientId } = spotifyCredentials;
+    // let spotifyAuthUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=https://querystrings.netlify.com&scope=user-read-playback-state&user-modify-playback-state`;
+    let spotifyAuthUrl = spotify.authorizeURL;
+    this.serverHtml = fs.readFileSync("./server.html", "utf8");
+    this.serverHtml = this.serverHtml.replace(
+      "{spotifyAuthUrl}",
+      spotifyAuthUrl
+    );
 
     // Start ngrok service for our http server
     (async () => {
@@ -48,6 +55,6 @@ export default class extends EventEmitter {
         // Say thanks
       }
     }
-    response.end(serverIndex);
+    response.end(this.serverHtml);
   };
 }

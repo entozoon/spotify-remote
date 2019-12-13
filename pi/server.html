@@ -33,16 +33,14 @@
     textarea {
       font-family: inherit;
       font-size: inherit;
+      min-width: 50%;
+      height: 4em;
     }
     [type="submit"] {
     }
     label {
       display: block;
       margin: 0 0 0.5em;
-    }
-    textarea {
-      min-width: 50%;
-      height: 3em;
     }
   </style>
   <body>
@@ -51,7 +49,7 @@
       <a
         id="auth"
         role="button"
-        href="https://accounts.spotify.com/authorize?client_id=3f8c992f08c04ffd975d95665dad1318&response_type=code&redirect_uri=https://querystrings.netlify.com&scope=user-read-playback-state%20user-modify-playback-state"
+        href="{spotifyAuthUrl}"
         target="_blank"
         onClick="toggleForm()"
         >Authorise Spotify (copy 'code' and come back!)</a
@@ -59,7 +57,7 @@
       <form id="form" type="GET" action="" style="opacity:.3">
         <p>
           <label>Paste Code:</label>
-          <textarea name="authToken" required></textarea>
+          <input name="authToken" required />
         </p>
         <button type="submit">Submit</button>
       </form>

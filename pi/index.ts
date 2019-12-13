@@ -1,23 +1,31 @@
 import Server from "./Server";
-import AuthToken from "./AuthToken";
+import Spotify from "./Spotify";
 
-const server = new Server();
-const authToken = new AuthToken();
+const spotifyCredentials = {
+  clientId: "3f8c992f08c04ffd975d95665dad1318",
+  clientSecret: "4d623279971343478816fa9c245a740c"
+};
+const spotify = new Spotify({ spotifyCredentials });
+const server = new Server({ spotifyCredentials, spotify });
 
 // Pass user input from web server to the authToken instance
-server.on("authToken", token => {
-  console.log("Initial auth token received!", token);
-  authToken.save(token);
-  // We've got a brand spanking new token ...
-  // But it might work already without needing initial input ..
+server.on("authToken", code => {
+  console.log("Initial auth token received!", code);
+  spotify.saveAuthTokenCode(code);
+  // We've got a brand spanking new token, so let spotify instance know
+  spotify.authorise();
 });
+// Also try on init, with whatever's saved
+spotify.letsTryOurAuthToken();
 
 // Needs to refresh token, say every half hour
 // let authRefreshInterval = setInterval(authToken.refresh, 1800000);
-let authRefreshInterval = setInterval(authToken.refresh, 30000);
+// let authRefreshInterval = setInterval(authToken.refresh, 30000);
+// ********** disabling for now
 
-setInterval(() => {
+const updateCurrentSongOrWhatever = async () => {
   // console.log(authToken.code);
-  // Have some kind of spotify class on the go at this point
-  console.log("Current song:");
-}, 5000);
+  const currentSong = await spotify.getCurrentSong();
+  console.log("Current song:", currentSong);
+};
+setInterval(updateCurrentSongOrWhatever, 5000);
