@@ -30,8 +30,13 @@ const requestHandler = (request, response) => {
     if (token) {
       console.log("Sick, a token was submitted:", token);
       // Save it to disk
-
+      fs.writeFileSync(
+        "spotify-auth-token.saved.json",
+        JSON.stringify({ token })
+      );
       // Let the app proper know about it
+      console.log("Let the app proper know about it, somehow...");
+      // Say thanks
       response.end(serverThanks);
     }
   }
