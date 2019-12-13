@@ -1,52 +1,53 @@
 const fs = require("fs");
 const http = require("http");
+const ngrok = require("ngrok");
 const ip = require("ip");
 const port = 55;
 const serverIndex = fs.readFileSync("./server-index.html", "utf8");
-const serverThanks = fs.readFileSync("./server-thanks.html", "utf8");
+const EventEmitter = require("events");
 
-// Start ngrok service for our http server
-const ngrok = require("ngrok");
-(async () => {
-  const url = await ngrok.connect({
-    port
-  });
-  console.log(
-    `LCD: Go to ${url.replace("https://", "")}
+export default class extends EventEmitter {
+  constructor() {
+    super();
+
+    // Start ngrok service for our http server
+    (async () => {
+      const url = await ngrok.connect({
+        port
+      });
+      console.log(
+        `LCD: Go to ${url.replace("https://", "")}
         or ${ip.address()}:${port}
 (Perhaps use port 80 on pi? ngrok still might be better. No same-wifi sitch)`
-  );
-})().catch(e => {
-  console.error("Error", e);
-});
-
-// Serving HTML and listening for gold
-const requestHandler = (request, response) => {
-  if (request.url === "/favicon.ico") return; // does my head in
-  console.log("Request:", request.url);
-  const { url } = request;
-  if (url.startsWith(`/?authToken=`)) {
-    let token = url.replace("/?authToken=", "");
-    if (token) {
-      console.log("Sick, a token was submitted:", token);
-      // Save it to disk
-      fs.writeFileSync(
-        "spotify-auth-token.saved.json",
-        JSON.stringify({ token })
       );
-      // Let the app proper know about it
-      console.log("Let the app proper know about it, somehow...");
-      // Say thanks
-      response.end(serverThanks);
-    }
-  }
-  response.end(serverIndex);
-};
+    })().catch(e => {
+      console.error("Error", e);
+    });
 
-// Start http server
-const server = http.createServer(requestHandler);
-server.listen(port, err => {
-  if (err) {
-    return console.log("Couldn't start a http server. Probs port issues:", err);
+    // Start http server
+    const server = http.createServer(this.requestHandler);
+    server.listen(port, err => {
+      if (err) {
+        return console.log(
+          "Couldn't start a http server. Probs port issues:",
+          err
+        );
+      }
+    });
   }
-});
+  // Serving HTML and listening for gold
+  requestHandler = (request, response) => {
+    if (request.url === "/favicon.ico") return; // does my head in
+    console.log("Request:", request.url);
+    const { url } = request;
+    if (url.startsWith(`/?authToken=`)) {
+      let authToken = url.replace("/?authToken=", "");
+      if (authToken) {
+        // Let the app proper know about it
+        this.emit("authToken", authToken);
+        // Say thanks
+      }
+    }
+    response.end(serverIndex);
+  };
+}

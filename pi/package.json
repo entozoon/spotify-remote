@@ -7,9 +7,9 @@
     "startnotyet": "clear && sudo node --no-deprecation --experimental-modules index",
     "spotify": "nodemon --no-deprecation --experimental-modules spotify.mjs",
     "callback": "nodemon --no-deprecation spotify-auth-callback",
-    "compile": "ts-node server",
+    "compile": "ts-node index",
     "start": "nodemon -e ts --exec \"npm run compile\"",
-    "start-with-daemon-why-bother-building": "ts-node server"
+    "start-with-daemon-why-bother-building": "ts-node index"
   },
   "author": "",
   "license": "ISC",
