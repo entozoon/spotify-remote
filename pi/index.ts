@@ -11,12 +11,12 @@ const server = new Server({ spotifyCredentials, spotify });
 // Pass user input from web server to the authToken instance
 server.on("authToken", code => {
   console.log("Initial auth token received!", code);
-  spotify.saveAuthTokenCode(code);
+  spotify.saveTokens({ code });
   // We've got a brand spanking new token, so let spotify instance know
   spotify.authorise();
 });
 // Also try on init, with whatever's saved
-spotify.letsTryOurAuthToken();
+spotify.letsTryOurTokens();
 
 // Needs to refresh token, say every half hour
 // let authRefreshInterval = setInterval(authToken.refresh, 1800000);

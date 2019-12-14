@@ -1,7 +1,7 @@
 const fs = require("fs");
 const SpotifyWebApi = require("spotify-web-api-node");
 const EventEmitter = require("events");
-const TokenFilename = "./spotify-auth-token.saved.json";
+const tokensFilename = "./spotify-tokens.saved.json";
 
 export default class extends EventEmitter {
   constructor({ spotifyCredentials }) {
@@ -14,70 +14,72 @@ export default class extends EventEmitter {
       redirectUri: "https://querystrings.netlify.com"
     });
   }
-  saveTokenCode = code => {
-    const token = {
-      code,
-      date: Date.now()
-    };
-    fs.writeFileSync(TokenFilename, JSON.stringify(token));
-    this.token = token;
+  saveTokens = ({ code, date = Date.now(), access = "" }) => {
+    fs.writeFileSync(tokensFilename, JSON.stringify({ code, date, access }));
+    // this._tokens = tokens;
   };
-  get Token() {
-    // If booting on a cold day, try and dig one from the saved file, never know.. it might work
-    if (!this.token) {
-      this.token = JSON.parse(fs.readFileSync(TokenFilename, "utf8"));
-    }
-    return this.token;
+  get tokens() {
+    // // If booting on a cold day, try and dig them from the saved file, never know.. it might work
+    // return this._tokens
+    //   ? this._tokens :
+    return JSON.parse(fs.readFileSync(tokensFilename, "utf8"));
   }
-  refreshToken = () => {
-    console.log("Refreshing token");
+  refreshTokens = () => {
+    console.log("Refreshing tokens");
     console.log("!! TO DO !! Via Spotify class function to help us out");
     // ....
-    // this.spotifyApi.refreshAccessToken().then(
+    // this.spotifyApi.refreshAccessTokens().then(
     //   data => {
-    //     console.log("The access token has been refreshed!");
-    //     spotifyApi.setAccessToken(data.body["access_token"]);
+    //     console.log("The access tokens has been refreshed!");
+    //     spotifyApi.setAccessTokens(data.body["access_tokens"]);
     //   },
     //   err => {
-    //     console.log("Could not refresh access token", err);
+    //     console.log("Could not refresh access tokens", err);
     //   }
     // );
     this.save("refreshed" + Math.random());
   };
   get authoriseURL() {
-    return this.spotifyApi.createAuthoriseURL([
+    return this.spotifyApi.createAuthorizeURL([
       "user-read-playback-state",
       "user-modify-playback-state"
     ]);
   }
   authorise = () => {
     console.log(":: authorise");
-    this.spotifyApi.authorizationCodeGrant(this.token.code).then(
+    this.spotifyApi.authorizationCodeGrant(this.tokens.code).then(
       data => {
         console.log("Authorised!");
-        // console.log("The token expires in " + data.body["expires_in"]);
-        // console.log("The access token is " + data.body["access_token"]);
-        // console.log("The refresh token is " + data.body["refresh_token"]);
-        // // Set the access token on the API object to use it in later calls
+        // console.log("The tokens expires in " + data.body["expires_in"]);
+        // console.log("The access tokens is " + data.body["access_tokens"]);
+        // console.log("The refresh tokens is " + data.body["refresh_tokens"]);
+        // // Set the access tokens on the API object to use it in later calls
         this.spotifyApi.setAccessToken(data.body["access_token"]);
         this.spotifyApi.setRefreshToken(data.body["refresh_token"]);
-        // it's the ACCESS TOKEN THAT YOU FRICKIN use
+        // it's the ACCESS TOKENs THAT YOU FRICKIN use
+        let tokens = this.tokens;
+        tokens.access = data.body["access_token"];
+        this.saveTokens(tokens);
       },
       err => {
-        console.log("Something went wrong!", err);
+        console.error("Something went wrong!", err);
       }
     );
   };
-  letsTryOurToken = () => {
-    console.log(":: letsTryOurToken");
-    this.spotifyApi.setAccessToken(this.token.code);
+  letsTryOurTokens = () => {
+    console.log(":: letsTryOurTokens");
+    this.spotifyApi.setAccessToken(this.tokens.access);
     this.spotifyApi.getMyCurrentPlaybackState({}).then(
-      function(data) {
-        // Output items
-        console.log("Now Playing: ", data.body);
+      data => {
+        const { is_playing, progress_ms, item } = data.body;
+        const { name } = item;
+        const artistName = item.artists[0].name;
+        console.log(name, "-", artistName);
+        console.log("is_playing", is_playing);
+        console.log("progress_ms", progress_ms);
       },
-      function(err) {
-        console.log("Something went wrong!", err);
+      err => {
+        console.error("Something went wrong!", err);
       }
     );
   };
