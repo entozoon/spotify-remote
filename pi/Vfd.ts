@@ -1,13 +1,15 @@
 //
 // https://forum.arduino.cc/index.php?topic=198201.0
 //
-import SerialPort from "serialport";
+// import * as SerialPort from "serialport";
+const SerialPort = require("serialport");
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
 // vfd.pipe(parser);
 // parser.on("data", line => console.log(`> ${line}`)); // won't happen tbh
 
 export default class Vdf {
+  serial = null;
   constructor() {}
   init() {
     console.log(":: init");
@@ -36,9 +38,7 @@ export default class Vdf {
         false
       );
       this.serial.on("error", err => {
-        console.log("Error:", err.message);
         reject(err.message);
-        // process.exit(1);
       });
       this.serial.on("open", () => {
         resolve();
@@ -59,17 +59,9 @@ export default class Vdf {
       });
     });
   }
-  resetVFD() {
-    console.log(":: resetVFD");
-    return this.writeBytes([
-      0x1b, // ESC
-      0x40, // software reset
-      0x1f,
-      0x02 // select scroll mode (0x01 over, 0x02 vert, 0x03 horiz)
-    ]);
-  }
   // this.resetVFD = this.writeBytes([
   resetVFD() {
+    console.log(":: resetVFD");
     return this.writeBytes([
       0x1b, // ESC
       0x40, // software reset
