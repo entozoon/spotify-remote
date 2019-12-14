@@ -50,11 +50,16 @@ server.on("authToken", async code => {
     });
 });
 
-server.on("init", ({ url, urlNgrok }) => {
+server.on("init", async ({ url, urlNgrok }) => {
   console.log(`
 VFD: Go to ${url}
    or ${urlNgrok.replace("https://", "")}
 (Perhaps use port 80 on pi? ngrok still might be better. No same-wifi sitch)`);
+  await vfd.echo(
+    `Go to ${url}
+or ${urlNgrok.replace("https://", "")}`,
+    0.8
+  );
 });
 
 // Dry run
