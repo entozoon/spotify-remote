@@ -11,7 +11,7 @@ export default class extends EventEmitter {
     const { clientId } = spotifyCredentials;
     // let authoriseURL = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=https://querystrings.netlify.com&scope=user-read-playback-state&user-modify-playback-state`;
     let authoriseURL = spotify.authoriseURL;
-    this.serverHtml = fs.readFileSync("./server.html", "utf8");
+    this.serverHtml = fs.readFileSync("./Server.html", "utf8");
     this.serverHtml = this.serverHtml.replace("{authoriseURL}", authoriseURL);
 
     // Start ngrok service for our http server
