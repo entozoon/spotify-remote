@@ -14,75 +14,80 @@ export default class extends EventEmitter {
       redirectUri: "https://querystrings.netlify.com"
     });
   }
-  saveTokens = ({ code, date = Date.now(), access = "" }) => {
-    fs.writeFileSync(tokensFilename, JSON.stringify({ code, date, access }));
-    // this._tokens = tokens;
+  saveTokens = ({
+    code = this.tokens.code,
+    access_token = "",
+    refresh_token = "",
+    // expires_in is also a thing
+    date = Date.now()
+  }) => {
+    // Spotify gives you a code, you give that back, it gives you an access token, you suicide
+    fs.writeFileSync(
+      tokensFilename,
+      JSON.stringify({ code, access_token, refresh_token, date })
+    );
+    this.setTokensOnApiNonsense();
   };
   get tokens() {
-    // // If booting on a cold day, try and dig them from the saved file, never know.. it might work
-    // return this._tokens
-    //   ? this._tokens :
     return JSON.parse(fs.readFileSync(tokensFilename, "utf8"));
   }
-  refreshTokens = () => {
-    console.log("Refreshing tokens");
-    console.log("!! TO DO !! Via Spotify class function to help us out");
-    // ....
-    // this.spotifyApi.refreshAccessTokens().then(
-    //   data => {
-    //     console.log("The access tokens has been refreshed!");
-    //     spotifyApi.setAccessTokens(data.body["access_tokens"]);
-    //   },
-    //   err => {
-    //     console.log("Could not refresh access tokens", err);
-    //   }
-    // );
-    this.save("refreshed" + Math.random());
-  };
+  setTokensOnApiNonsense = () =>
+    new Promise((resolve, reject) => {
+      // console.log(":: setTokensOnApiNonsense", this.tokens);
+
+      this.tokens.access_token &&
+        this.spotifyApi.setAccessToken(this.tokens.access_token);
+      this.tokens.refresh_token &&
+        this.spotifyApi.setRefreshToken(this.tokens.refresh_token);
+      resolve();
+    });
+
   get authoriseURL() {
     return this.spotifyApi.createAuthorizeURL([
       "user-read-playback-state",
       "user-modify-playback-state"
     ]);
   }
-  authorise = () => {
-    console.log(":: authorise");
-    this.spotifyApi.authorizationCodeGrant(this.tokens.code).then(
+  authorise = async () =>
+    new Promise((resolve, reject) => {
+      this.spotifyApi.authorizationCodeGrant(this.tokens.code).then(
+        data => {
+          console.log("Authorised!");
+          this.saveTokens(data.body);
+          return resolve();
+        },
+        err => {
+          return reject(err);
+        }
+      );
+    });
+  refreshTokens = () => {
+    console.log(":: refreshTokens");
+    this.spotifyApi.refreshAccessToken().then(
       data => {
-        console.log("Authorised!");
-        // console.log("The tokens expires in " + data.body["expires_in"]);
-        // console.log("The access tokens is " + data.body["access_tokens"]);
-        // console.log("The refresh tokens is " + data.body["refresh_tokens"]);
-        // // Set the access tokens on the API object to use it in later calls
-        this.spotifyApi.setAccessToken(data.body["access_token"]);
-        this.spotifyApi.setRefreshToken(data.body["refresh_token"]);
-        // it's the ACCESS TOKENs THAT YOU FRICKIN use
-        let tokens = this.tokens;
-        tokens.access = data.body["access_token"];
-        this.saveTokens(tokens);
+        console.log("Refreshed!");
+        this.saveTokens(data.body);
       },
       err => {
-        console.error("Something went wrong!", err);
+        console.error("Could not refresh access tokens", err);
       }
     );
   };
-  letsTryOurTokens = () => {
-    console.log(":: letsTryOurTokens");
-    this.spotifyApi.setAccessToken(this.tokens.access);
-    this.spotifyApi.getMyCurrentPlaybackState({}).then(
-      data => {
-        const { is_playing, progress_ms, item } = data.body;
-        const { name } = item;
-        const artistName = item.artists[0].name;
-        console.log(name, "-", artistName);
-        console.log("is_playing", is_playing);
-        console.log("progress_ms", progress_ms);
-      },
-      err => {
-        console.error("Something went wrong!", err);
-      }
-    );
-  };
+  currentPlaybackState = async () =>
+    new Promise((resolve, reject) => {
+      this.spotifyApi.getMyCurrentPlaybackState().then(
+        data => {
+          const { is_playing, progress_ms, item } = data.body;
+          const { name } = item;
+          const artistName = item.artists[0].name;
+          return resolve({ name, artistName, is_playing, progress_ms });
+        },
+        err => {
+          return reject(err);
+        }
+      );
+    });
+
   getCurrentSong = () =>
     new Promise(resolve => {
       resolve(`song name or whatevs`);

@@ -16,14 +16,9 @@ export default class extends EventEmitter {
 
     // Start ngrok service for our http server
     (async () => {
-      const url = await ngrok.connect({
-        port
-      });
-      console.log(
-        `LCD: Go to ${url.replace("https://", "")}
-        or ${ip.address()}:${port}
-(Perhaps use port 80 on pi? ngrok still might be better. No same-wifi sitch)`
-      );
+      const url = `${ip.address()}:${port}`;
+      const urlNgrok = await ngrok.connect({ port });
+      this.emit("init", { url, urlNgrok });
     })().catch(e => {
       console.error("Error", e);
     });
@@ -42,7 +37,7 @@ export default class extends EventEmitter {
   // Serving HTML and listening for gold
   requestHandler = (request, response) => {
     if (request.url === "/favicon.ico") return; // does my head in
-    console.log("Request:", request.url);
+    // console.log("Request:", request.url);
     const { url } = request;
     if (url.startsWith(`/?authToken=`)) {
       let authToken = url.replace("/?authToken=", "");
