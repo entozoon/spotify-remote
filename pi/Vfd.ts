@@ -10,6 +10,7 @@ const SerialPort = require("serialport");
 
 export default class Vdf {
   serial = null;
+  initialised = false;
   constructor() {}
   init() {
     console.log(":: init");
@@ -41,6 +42,7 @@ export default class Vdf {
         reject(err.message);
       });
       this.serial.on("open", () => {
+        this.initialised = true;
         resolve();
       });
     });
@@ -82,6 +84,7 @@ export default class Vdf {
   // speed: 0 -> 1
   // this.echo = (verse, speed) => {
   echo(verse, speed) {
+    if (!this.initialised) return;
     console.log(":: echo");
     speed = typeof speed == "undefined" ? 1 : speed;
     return new Promise(resolve => {

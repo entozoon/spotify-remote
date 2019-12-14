@@ -23,7 +23,6 @@ const vfd = new Vfd();
   await vfd.resetFont();
   await vfd.setBrightness(5);
   await vfd.drawLine();
-  await vfd.echo("Bam!", 1);
 })();
 
 // Web server user input received
@@ -51,14 +50,21 @@ server.on("authToken", async code => {
     });
 });
 
+server.on("init", ({ url, urlNgrok }) => {
+  console.log(`
+VFD: Go to ${url}
+   or ${urlNgrok.replace("https://", "")}
+(Perhaps use port 80 on pi? ngrok still might be better. No same-wifi sitch)`);
+});
+
 // Dry run
 (async () => {
   await spotify.setTokensOnApiNonsense();
   await spotify
     .currentPlaybackState()
-    .catch(e => {
-      console.error("Error::dry run", e);
-    })
+    // .catch(e => {
+    //   return console.error("Error::dry run", e);
+    // })
     .then(state => {
       vfdDisplaySongState(state);
     })
@@ -66,18 +72,14 @@ server.on("authToken", async code => {
       console.log(
         "No joy with saved tokens. Creating a web server for user input"
       );
-      server.on("init", ({ url, urlNgrok }) => {
-        console.log(
-          `VFD: Go to ${url}
-      or ${urlNgrok.replace("https://", "")}
-(Perhaps use port 80 on pi? ngrok still might be better. No same-wifi sitch)`
-        );
-      });
     });
 })();
 
-const vfdDisplaySongState = state => {
+const vfdDisplaySongState = async state => {
   console.log("VFD:", state);
+  if (state && state.name && state.artistName) {
+    await vfd.echo(`${state.name} - ${state.artistName}`, 1);
+  }
 };
 
 // Needs to refresh token, they last an hour but, yeah turning on and off..

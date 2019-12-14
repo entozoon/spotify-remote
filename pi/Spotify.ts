@@ -75,6 +75,7 @@ export default class extends EventEmitter {
   };
   currentPlaybackState = async () =>
     new Promise((resolve, reject) => {
+      // console.log("dry run problems", this.spotifyApi);
       this.spotifyApi.getMyCurrentPlaybackState().then(
         data => {
           const { is_playing, progress_ms, item } = data.body;
