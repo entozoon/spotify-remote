@@ -8,6 +8,7 @@
     "spotify": "nodemon --no-deprecation --experimental-modules spotify.mjs",
     "callback": "nodemon --no-deprecation spotify-auth-callback",
     "compile": "ts-node index",
+    "start-pi": "ts-node index",
     "start": "nodemon -e ts --exec \"cls && npm run compile\"",
     "start-with-daemon-why-bother-building": "ts-node index"
   },
