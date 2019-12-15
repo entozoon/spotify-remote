@@ -43,6 +43,7 @@ export default class Vdf {
         reject(err.message);
       });
       this.serial.on("open", () => {
+        console.log("Serial ready");
         this.initialised = true;
         resolve();
       });
@@ -59,9 +60,10 @@ export default class Vdf {
       byteArray.forEach((b, i) => {
         buffer[i] = b;
       });
-      // console.log("Writing", byteArray);
+      console.log("Writing", JSON.stringify(byteArray));
       // Write said buffer, resolving as appr
       this.serial.write(buffer, (err, result) => {
+        console.log("Written...", err);
         return err ? reject(err) : resolve();
       });
     });
