@@ -80,8 +80,9 @@ server.on("authToken", async code => {
 server.on("init", async ({ url, urlNgrok }) => {
   if (!playingNicely) {
     await vfd.echo(
-      `Go to ${url}
-or ${urlNgrok.replace("https://", "")}`,
+      `
+Go to ${url}
+   or ${urlNgrok.replace("https://", "")}`,
       0.95
     );
   }
