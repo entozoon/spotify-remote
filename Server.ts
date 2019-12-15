@@ -1,9 +1,10 @@
-const fs = require("fs");
-const http = require("http");
-const ngrok = require("ngrok");
-const ip = require("ip");
-const port = 3003;
-const EventEmitter = require("events");
+const fs = require("fs"),
+  http = require("http"),
+  ngrok = require("ngrok"),
+  ip = require("ip"),
+  port = 80,
+  serverTimeout = 4000,
+  EventEmitter = require("events");
 
 export default class extends EventEmitter {
   constructor({ spotifyCredentials, spotify }) {
@@ -23,16 +24,18 @@ export default class extends EventEmitter {
       console.error("Error", e);
     });
 
-    // Start http server
-    const server = http.createServer(this.requestHandler);
-    server.listen(port, err => {
-      if (err) {
-        return console.log(
-          "Couldn't start a http server. Probs port issues:",
-          err
-        );
-      }
-    });
+    // Start http server, after a breather because.. ideally the dry run will work first
+    setTimeout(() => {
+      const server = http.createServer(this.requestHandler);
+      server.listen(port, err => {
+        if (err) {
+          return console.log(
+            "Couldn't start a http server. Probs port issues:",
+            err
+          );
+        }
+      });
+    }, serverTimeout);
   }
   // Serving HTML and listening for gold
   requestHandler = (request, response) => {

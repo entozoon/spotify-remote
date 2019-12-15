@@ -11,6 +11,7 @@ const SerialPort = require("serialport");
 export default class Vdf {
   serial = null;
   initialised = false;
+  disabled = false;
   constructor() {}
   init() {
     console.log(":: init");
@@ -47,7 +48,11 @@ export default class Vdf {
       });
     });
   }
+  disable() {
+    this.disabled = true;
+  }
   writeBytes(byteArray) {
+    if (this.disabled) return;
     return new Promise((resolve, reject) => {
       // Convert array of bytes to a buffer array (similar)
       let buffer = new Buffer(byteArray.length);
@@ -102,6 +107,10 @@ export default class Vdf {
       }, (1 - speed) * 500); // 500 -> 0ms between each letter
     });
   }
+  setCode(set, code) {
+    console.log(":: setKerning", set, code);
+    return this.writeBytes([0x1b, 0x52, set, 0x1b, 0x74, code]);
+  }
   // this.setKerning = size0to3 =>
   setKerning(size0to3) {
     // Looking for font size? There's a magnification concept. Default is smallest, so meh.
@@ -113,12 +122,12 @@ export default class Vdf {
     return this.writeBytes([0x1f, 0x28, 0x67, 0x03, size0to3 % 0x100]);
   }
   // this.resetFont = () => {
-  resetFont() {
-    console.log(":: resetFont");
+  async resetFont() {
+    console.log(":: resetFont ");
     // England
-    const set = 3;
-    const code = 0;
-    return this.writeBytes([0x1b, 0x52, set, 0x1b, 0x74, code]);
+    await this.setCode(3, 0);
+    await this.setKerning(2);
+    return;
   }
   drawBitmap(bmp, width, height) {
     /* prettier-ignore */
@@ -243,4 +252,16 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
+  drawProgressBar(progressFraction) {}
+  displaySongState = async state => {
+    if (state) {
+      console.log(state);
+      let { name, artist, progressFraction } = state;
+      await this.echo(`${name} - ${artist}`, 0.8);
+      await this.drawProgressBar(progressFraction);
+    } else {
+      console.log("No song playing");
+      await this.echo(`No song playing`, 0.8);
+    }
+  };
 }

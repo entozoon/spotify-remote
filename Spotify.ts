@@ -26,14 +26,14 @@ export default class extends EventEmitter {
       tokensFilename,
       JSON.stringify({ code, access_token, refresh_token, date })
     );
-    this.setTokensOnApiNonsense();
+    this.setTokensOntoApiNonsense();
   };
   get tokens() {
     return JSON.parse(fs.readFileSync(tokensFilename, "utf8"));
   }
-  setTokensOnApiNonsense = () =>
+  setTokensOntoApiNonsense = () =>
     new Promise((resolve, reject) => {
-      // console.log(":: setTokensOnApiNonsense", this.tokens);
+      // console.log(":: setTokensOntoApiNonsense", this.tokens);
 
       this.tokens.access_token &&
         this.spotifyApi.setAccessToken(this.tokens.access_token);
@@ -57,6 +57,7 @@ export default class extends EventEmitter {
           return resolve();
         },
         err => {
+          // Probably the saved tokens are out of date
           return reject(err);
         }
       );
@@ -78,10 +79,24 @@ export default class extends EventEmitter {
       // console.log("dry run problems", this.spotifyApi);
       this.spotifyApi.getMyCurrentPlaybackState().then(
         data => {
-          const { is_playing, progress_ms, item } = data.body;
-          const { name } = item;
-          const artistName = item.artists[0].name;
-          return resolve({ name, artistName, is_playing, progress_ms });
+          if (!data.body.is_playing) return resolve(null);
+          const { progress_ms } = data.body,
+            { name, album, duration_ms } = data.body.item,
+            { volume_percent } = data.body.device,
+            // artistName = artists ? artists[0].name : null,
+            artist = album.artists.map(a => a.name).join(", "),
+            albumName = album.name,
+            progressFraction = progress_ms / duration_ms,
+            state = {
+              name,
+              artist,
+              albumName,
+              duration_ms,
+              progress_ms,
+              progressFraction,
+              volume_percent
+            };
+          return resolve(state);
         },
         err => {
           return reject(err);
