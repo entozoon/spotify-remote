@@ -75,16 +75,11 @@ server.on("authToken", async code => {
 });
 
 server.on("init", async ({ url, urlNgrok }) => {
-  console.log(`
-Go to ${url}
-   or ${urlNgrok.replace("https://", "")}
-(Perhaps use port 80 on pi? ngrok still might be better. No same-wifi sitch)
-`);
   if (!playingNicely) {
     await vfd.echo(
       `Go to ${url}
 or ${urlNgrok.replace("https://", "")}`,
-      0.8
+      0.95
     );
   }
 });
@@ -92,13 +87,9 @@ or ${urlNgrok.replace("https://", "")}`,
 // Needs to refresh token, they last an hour but, yeah turning on and off..
 let authRefreshInterval = setInterval(() => {
   spotify.refreshTokens().catch(async e => {
-    console.log(
-      `Could not refresh access tokens, probably the saved tokens are out of date.`,
-      e
-    );
     await vfd.echo(
       `Could not refresh access tokens, probably the saved tokens are out of date.`,
-      0.8
+      0.9
     );
   });
 }, 600000); // 10m

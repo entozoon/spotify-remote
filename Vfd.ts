@@ -89,6 +89,7 @@ export default class Vdf {
   // speed: 0 -> 1
   // this.echo = (verse, speed) => {
   echo(verse, speed) {
+    if (this.disabled) return console.log(verse);
     if (!this.initialised) return;
     console.log(":: echo");
     speed = typeof speed == "undefined" ? 1 : speed;
@@ -100,7 +101,7 @@ export default class Vdf {
         process.stdout.write(letter);
         this.serial.write(letter);
         if (_verse.length <= 0) {
-          console.log("");
+          process.stdout.write("\n");
           clearInterval(lettering);
           resolve();
         }
@@ -257,11 +258,11 @@ export default class Vdf {
     if (state) {
       console.log(state);
       let { name, artist, progressFraction } = state;
-      await this.echo(`${name} - ${artist}`, 0.8);
+      await this.echo(`${name} - ${artist}`, 0.9);
       await this.drawProgressBar(progressFraction);
     } else {
       console.log("No song playing");
-      await this.echo(`No song playing`, 0.8);
+      await this.echo(`No song playing`, 0.9);
     }
   };
 }

@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "tsc -w && nodemon index",
-    "start-pi": "node ./dist/index",
-    "dev-pi": "nodemon ./dist/index",
+    "start-pi": "sudo node ./dist/index",
+    "dev-pi": "sudo nodemon ./dist/index",
     "build": "tsc"
   },
   "author": "",
