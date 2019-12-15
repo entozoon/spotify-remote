@@ -6,7 +6,8 @@
   "scripts": {
     "start": "tsc -w && nodemon index",
     "start-pi": "sudo node ./dist/index",
-    "dev-pi": "sudo nodemon ./dist/index",
+    "dev-pi": "sudo npm run run-dist",
+    "run-dist": "nodemon ./dist/index",
     "build": "tsc"
   },
   "author": "",
