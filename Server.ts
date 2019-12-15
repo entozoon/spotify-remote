@@ -29,16 +29,13 @@ export default class extends EventEmitter {
       const server = http.createServer(this.requestHandler);
       server.on("error", err => {
         return console.log(
-          "Couldn't start a http server. Probs port issues, are you running as sudo? 1:",
+          "Couldn't start a http server. Probs port issues, are you running as sudo?:",
           err
         );
       });
       server.listen(port, err => {
         if (err) {
-          return console.log(
-            "Couldn't start a http server. Probs port issues, are you running as sudo? 2:",
-            err
-          );
+          console.log(err);
         }
       });
     }, serverTimeout);
