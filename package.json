@@ -8,7 +8,8 @@
     "start-pi": "sudo node ./dist/index",
     "dev-pi": "sudo npm run run-dist",
     "run-dist": "nodemon -e *.js ./dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "test-vfd": "node /dist/test-vfd.js"
   },
   "author": "",
   "license": "ISC",
