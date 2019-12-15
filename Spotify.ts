@@ -62,18 +62,18 @@ export default class extends EventEmitter {
         }
       );
     });
-  refreshTokens = () => {
-    console.log(":: refreshTokens");
-    this.spotifyApi.refreshAccessToken().then(
-      data => {
-        console.log("Refreshed!");
-        this.saveTokens(data.body);
-      },
-      err => {
-        console.error("Could not refresh access tokens", err);
-      }
-    );
-  };
+  refreshTokens = () =>
+    new Promise((resolve, reject) => {
+      console.log(":: refreshTokens");
+      this.spotifyApi.refreshAccessToken().then(
+        data => {
+          console.log("Refreshed!");
+          this.saveTokens(data.body);
+          resolve();
+        },
+        e => reject
+      );
+    });
   currentPlaybackState = async () =>
     new Promise((resolve, reject) => {
       // console.log("dry run problems", this.spotifyApi);

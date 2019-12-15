@@ -90,7 +90,18 @@ or ${urlNgrok.replace("https://", "")}`,
 });
 
 // Needs to refresh token, they last an hour but, yeah turning on and off..
-let authRefreshInterval = setInterval(spotify.refreshTokens, 600000); // 10m
+let authRefreshInterval = setInterval(() => {
+  spotify.refreshTokens().catch(e => {
+    console.log(
+      `Could not refresh access tokens, probably the saved tokens are out of date.`,
+      e
+    );
+    await vfd.echo(
+      `Could not refresh access tokens, probably the saved tokens are out of date.`,
+      0.8
+    );
+  });
+}, 600000); // 10m
 
 // const updateCurrentSongOrWhatever = async () => {
 //   // console.log(authToken.code);
