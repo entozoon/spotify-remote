@@ -4,17 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "startnotyet": "clear && sudo node --no-deprecation --experimental-modules index",
-    "spotify": "nodemon --no-deprecation --experimental-modules spotify.mjs",
-    "callback": "nodemon --no-deprecation spotify-auth-callback",
-    "compile": "ts-node index",
-    "start-pi": "node ./dist/index",
-    "start-ts-node-style": "nodemon -e ts --exec \"cls && npm run compile\"",
     "start": "tsc -w && nodemon index",
-    "dev-pi": "git pull && npm run build && sudo npm run start-pi",
-    "start-with-daemon-why-bother-building": "ts-node index",
-    "build": "tsc",
-    "build-needs-to-run-in-tandem-with-start-or-in-fact-bin-off-ts-node-entirely": ""
+    "start-pi": "node ./dist/index",
+    "dev-pi": "nodemon ./dist/index",
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
@@ -25,7 +18,6 @@
     "nodemon": "^2.0.2",
     "serialport": "^8.0.5",
     "spotify-web-api-node": "^4.0.0",
-    "ts-node": "^8.5.4",
     "typescript": "^3.7.3"
   }
 }
