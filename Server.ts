@@ -27,10 +27,10 @@ export default class extends EventEmitter {
     // Start http server, after a breather because.. ideally the dry run will work first
     setTimeout(() => {
       const server = http.createServer(this.requestHandler);
-      server.listen(port, err => {
+      server.listen(port).catch(err => {
         if (err) {
           return console.log(
-            "Couldn't start a http server. Probs port issues:",
+            "Couldn't start a http server. Probs port issues, are you running as sudo?:",
             err
           );
         }

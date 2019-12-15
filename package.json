@@ -9,7 +9,8 @@
     "callback": "nodemon --no-deprecation spotify-auth-callback",
     "compile": "ts-node index",
     "start-pi": "node ./dist/index",
-    "start": "nodemon -e ts --exec \"cls && npm run compile\"",
+    "start-ts-node-style": "nodemon -e ts --exec \"cls && npm run compile\"",
+    "start": "tsc -w && nodemon index",
     "start-with-daemon-why-bother-building": "ts-node index",
     "build": "tsc",
     "build-needs-to-run-in-tandem-with-start-or-in-fact-bin-off-ts-node-entirely": ""
