@@ -3,15 +3,12 @@
 //
 // import * as SerialPort from "serialport";
 const SerialPort = require("serialport");
+import { msToTime } from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
 // vfd.pipe(parser);
 // parser.on("data", line => console.log(`> ${line}`)); // won't happen tbh
-const msToTime = ms => {
-  // https://stackoverflow.com/a/37770048
-  const s = ~~(ms / 1000);
-  return (s - (s %= 60)) / 60 + (9 < s ? ":" : ":0") + s;
-};
+
 export default class Vdf {
   serial = null;
   initialised = false;
@@ -220,7 +217,7 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  drawLine() {
+  drawLine(x, y, length) {
     //
     //
     //
@@ -258,7 +255,9 @@ export default class Vdf {
     // 0 0 0 0 000000000000 0000000000000000
     // 0 0 0 0 000000000000 0000000000000000
     //
-    // Now this reaaaaaaally is a fucking algorithm to figure out. Holy satan.
+    // Maybe it'd be smarter to be like
+    // drawRect(x1,y1,x2,y2);
+    // drawRectDotty(x1,y1,x2,y2);
     //
     /* prettier-ignore */
     let bmp = [
@@ -286,7 +285,27 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  drawProgressBar(progressFraction) {}
+  drawBitmapProper(bmp) {
+    console.log("this is gonna be.. oh man");
+  }
+  drawRect = async (x1, y1, x2, y2) => {
+    console.log("These are gonna be.. sooo hard to figure out. Full circadian");
+    this.drawBitmapProper([]);
+  };
+  drawRectDotty = async (x1, y1, x2, y2) => {
+    console.log("These are gonna be.. sooo hard to figure out. Full circadian");
+    this.drawBitmapProper([]);
+  };
+  drawProgressBar = async fraction => {
+    //
+  };
+  drawVolumeBar = async (progress, fraction, duration) => {
+    await this.echo(`${progress}`, 0, 3, 0.9);
+    await this.echo(`${duration}`, 100, 3, 0.9);
+    // this.drawLine(30, 3, fraction * 70);
+    // this.drawRect(30, 3, 30 + fraction * 70, 3); //hmmm arrrghhh
+    // this.drawRectDotty(30 + fraction * 70, 3, 70 - fraction * 70);
+  };
   displaySongState = async state => {
     this.clear();
     if (state) {
@@ -297,7 +316,8 @@ export default class Vdf {
         progress_ms,
         duration_ms,
         progressFraction,
-        volume_percent
+        volume_percent,
+        volumeFraction
       } = state;
       await this.echo(`${name}`, 0, 0, 0.9);
       await this.echo(`${artist}`, 0, 1, 0.9);
@@ -307,8 +327,13 @@ export default class Vdf {
         2,
         0.9
       );
-      await this.echo(`Volume: ${volume_percent}`, 0, 3, 0.9);
       await this.drawProgressBar(progressFraction);
+      // await this.echo(`Volume: ${volume_percent}`, 0, 3, 0.9);
+      await this.drawVolumeBar(
+        msToTime(progress_ms),
+        volumeFraction,
+        msToTime(duration_ms)
+      );
     } else {
       console.log("No song playing");
       // Myke: there's a write mixture display mode. insert style and shit
