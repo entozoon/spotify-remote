@@ -12,5 +12,7 @@ const vfd = new Vfd();
   await vfd.resetFont();
   await vfd.setBrightness(5);
   await vfd.echo("Bam!", 0.9);
+  await vfd.setCursor(5, 2);
+  await vfd.echo("Bam!", 0.9);
   // await vfd.drawLine();
 })();

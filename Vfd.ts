@@ -93,10 +93,19 @@ export default class Vdf {
     return this.writeBytes([0x0c]);
   }
   setCursor(x, y) {
-    let x1 = 0x00;
+    let x1 = 0x03;
     let x2 = 0x00;
-    let y1 = 0x00;
+    let y1 = 0x01;
     let y2 = 0x00;
+    //     Code: 1FH 24H xL xH yL yH
+    //  xL: Cursor position x Lower byte (1 dot/unit)
+    //  xH: Cursor position x Upper byte (1 dot/unit)
+    //  yL: Cursor position y Lower byte (8 dot/unit)
+    //  yH: Cursor position y Upper byte(8 dot/unit)
+    // Definable area:
+    // 0 ≦ (xL + xH x 255) ≦ 255
+    // 0 ≦ (yL + yH x 255) ≦ 3
+    // Might be affected by the mixture mode.. this'll take some playing with
     return this.writeBytes([0x1f, 0x24, x1, x2, y1, y2]);
   }
   // speed: 0 -> 1
