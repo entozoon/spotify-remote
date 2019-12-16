@@ -1,6 +1,12 @@
-    npm start
+# Spotify Remote
+
+## Installation
+
+TIP: Add empty ssh to its windows boot dir on SD card, to enable ssh immediately.
 
 https://medium.com/@danidudas/how-to-install-node-js-and-npm-on-any-raspberry-pi-5a82acdfeefc
+
+### Enable serial
 
 sudo raspi-config
 interfacing > SPI and i2c > enable those buggers, though not sure i'm using them
@@ -14,6 +20,27 @@ Also open up /boot/config.txt and add:
 
     enable_uart=1
     dtoverlay=pi3-disable-bt
+
+### Set up WIFI
+
+sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+OR might be able to just save this as wpa_supplicant.conf in the boot dir too!
+
+    country=US
+    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+    update_config=1
+    network={
+     ssid="2Moe2Mansion"
+     scan_ssid=1
+     psk="bigboobs"
+     key_mgmt=WPA-PSK
+    }
+    network={
+     ssid="TechdeptFast"
+     scan_ssid=1
+     psk="techdept13ew"
+     key_mgmt=WPA-PSK
+    }
 
 ### Ideas
 
