@@ -66,3 +66,9 @@ If device goes off for an hour, it'll need re-auth
 
 REASONING fOR tO Do ThIs OnE:
 I'm just one guy. It's only for me. If I have to phone my way into a IP address and auth it every time it turns on, so be it.
+
+## Troubleshooting
+
+### Nothing on screen?
+
+One time, at band camp, `this.serial.write` was just straight up not doing anything or not firing its callback. A reboot fixed it

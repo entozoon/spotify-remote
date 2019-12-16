@@ -3,7 +3,7 @@ const fs = require("fs"),
   ngrok = require("ngrok"),
   ip = require("ip"),
   port = 80,
-  serverTimeout = 4000,
+  serverTimeout = 5000,
   EventEmitter = require("events");
 
 export default class extends EventEmitter {

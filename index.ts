@@ -7,8 +7,8 @@ import Server from "./Server";
 import Spotify from "./Spotify";
 import Vfd from "./Vfd";
 
-var uid = parseInt(process.env.SUDO_UID);
-console.log(uid);
+// var uid = parseInt(process.env.SUDO_UID);
+// console.log(uid);
 
 const spotifyCredentials = {
   clientId: "3f8c992f08c04ffd975d95665dad1318",
@@ -80,9 +80,8 @@ server.on("authToken", async code => {
 server.on("init", async ({ url, urlNgrok }) => {
   if (!playingNicely) {
     await vfd.echo(
-      `
-Go to ${url}
-   or ${urlNgrok.replace("https://", "")}`,
+      `Go to ${url}
+or ${urlNgrok.replace("https://", "")}`,
       0.95
     );
   }

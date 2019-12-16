@@ -7,17 +7,10 @@ import Vfd from "./Vfd";
 const vfd = new Vfd();
 
 (async () => {
-  await vfd
-    .init()
-    .catch(e => {
-      console.log("Error::VFD can't init -", e);
-      vfd.disable(); // continues on after this point but be reet
-    })
-    .then(async () => {
-      await vfd.resetVFD();
-      await vfd.resetFont();
-      await vfd.setBrightness(5);
-      await vfd.echo("Bam!", 0.9);
-      // await vfd.drawLine();
-    });
+  await vfd.init();
+  await vfd.resetVFD();
+  await vfd.resetFont();
+  await vfd.setBrightness(5);
+  await vfd.echo("Bam!", 0.9);
+  // await vfd.drawLine();
 })();

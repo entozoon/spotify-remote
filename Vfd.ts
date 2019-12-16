@@ -37,10 +37,15 @@ export default class Vdf {
           // xon: false, // flow control setting
           // highWaterMark: 12 // 64 * 1024, // The size of the read and write buffers defaults to 64k.
         },
-        false
+        // false
+        e => {
+          console.error(e);
+          reject(e);
+        }
       );
-      this.serial.on("error", err => {
-        reject(err.message);
+      this.serial.on("error", e => {
+        console.error(e);
+        reject(e);
       });
       this.serial.on("open", () => {
         console.log("Serial ready");
@@ -60,11 +65,10 @@ export default class Vdf {
       byteArray.forEach((b, i) => {
         buffer[i] = b;
       });
-      console.log("Writing", JSON.stringify(byteArray));
+      // console.log("Writing", JSON.stringify(byteArray));
       // Write said buffer, resolving as appr
-      this.serial.write(buffer, (err, result) => {
-        console.log("Written...", err);
-        return err ? reject(err) : resolve();
+      this.serial.write(buffer, e => {
+        return e ? reject(e) : resolve();
       });
     });
   }
@@ -87,6 +91,13 @@ export default class Vdf {
   clear() {
     console.log(":: clear");
     return this.writeBytes([0x0c]);
+  }
+  setCursor(x, y) {
+    let x1 = 0x00;
+    let x2 = 0x00;
+    let y1 = 0x00;
+    let y2 = 0x00;
+    return this.writeBytes([0x1f, 0x24, x1, x2, y1, y2]);
   }
   // speed: 0 -> 1
   // this.echo = (verse, speed) => {
@@ -264,6 +275,7 @@ export default class Vdf {
       await this.drawProgressBar(progressFraction);
     } else {
       console.log("No song playing");
+      // Myke: there's a write mixture display mode. insert style and shit
       await this.echo(`No song playing`, 0.9);
     }
   };
