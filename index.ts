@@ -78,12 +78,11 @@ server.on("authToken", async code => {
 });
 
 server.on("init", async ({ url, urlNgrok }) => {
+  console.log(":: Index: server init");
+
   if (!playingNicely) {
-    await vfd.echo(
-      `Go to ${url}
-or ${urlNgrok.replace("https://", "")}`,
-      0.95
-    );
+    await vfd.echo(`Go to ${url.replace(":80", "")}`, 0, 0, 0.95);
+    await vfd.echo(`or ${urlNgrok.replace("https://", "")}`, 0, 1, 0.95);
   }
 });
 
@@ -92,6 +91,8 @@ let authRefreshInterval = setInterval(() => {
   spotify.refreshTokens().catch(async e => {
     await vfd.echo(
       `Could not refresh access tokens, probably the saved tokens are out of date.`,
+      0,
+      0,
       0.9
     );
   });
