@@ -1,6 +1,14 @@
 # Spotify Remote
 
-## Installation
+## Dev
+
+    npm i
+    npm start
+
+This should compile to /dist, which is then SFTPd to the Pi.
+If you want other files to update on Pi (e.g. a package.json script) git push and pull it properly.
+
+## Installation on Pi
 
 TIP: Add empty ssh to its windows boot dir on SD card, to enable ssh immediately.
 
