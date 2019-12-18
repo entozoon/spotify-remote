@@ -4,15 +4,20 @@
 // https://github.com/entozoon/noritake-vfd/
 //
 import Vfd from "./Vfd";
-const vfd = new Vfd();
-
-(async () => {
+const test = async () => {
+  const vfd = new Vfd();
   await vfd.init();
   await vfd.resetVFD();
   await vfd.resetFont();
+  await vfd.setMixtureMode("normal");
   await vfd.setBrightness(5);
-  await vfd.echo("Bam!", 0.9);
-  await vfd.setCursor(5, 2);
-  await vfd.echo("Bam!", 0.9);
+  await vfd.echo("Bam", 0, 0, 0.9);
+  await vfd.setCursor(15, 1);
+  await vfd.echo("Bam..", 20, 1, 0.9);
+  await vfd.drawRect(0, 16, 30, 24);
+  await vfd.drawRectDotty(50, 16, 80, 24);
+  await vfd.close();
   // await vfd.drawLine();
-})();
+};
+// setInterval(test, 5000);
+test();

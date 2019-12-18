@@ -3,6 +3,7 @@
 //
 // import * as SerialPort from "serialport";
 const SerialPort = require("serialport");
+import { msToTime } from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
 // vfd.pipe(parser);
@@ -54,6 +55,9 @@ export default class Vdf {
       });
     });
   }
+  close() {
+    this.serial.close();
+  }
   disable() {
     this.disabled = true;
   }
@@ -61,7 +65,8 @@ export default class Vdf {
     if (this.disabled) return;
     return new Promise((resolve, reject) => {
       // Convert array of bytes to a buffer array (similar)
-      let buffer = new Buffer(byteArray.length);
+      // let buffer = new Buffer(byteArray.length);
+      let buffer = Buffer.alloc(byteArray.length);
       byteArray.forEach((b, i) => {
         buffer[i] = b;
       });
@@ -87,33 +92,39 @@ export default class Vdf {
     console.log(":: setBrightness", level1to8);
     return this.writeBytes([0x1f, 0x58, level1to8]);
   }
+  // normal, and, or, xor
+  setMixtureMode(mode) {
+    console.log(":: setMixtureMode", mode);
+    const modeByte = ["normal", "and", "or", "xor"].indexOf(mode);
+    return this.writeBytes([0x1f, 0x77, modeByte]);
+  }
   // this.clear = () => {
   clear() {
     console.log(":: clear");
     return this.writeBytes([0x0c]);
   }
+  // x (pixels), y (row)
   setCursor(x, y) {
-    let x1 = 0x03;
-    let x2 = 0x00;
-    let y1 = 0x01;
-    let y2 = 0x00;
     //     Code: 1FH 24H xL xH yL yH
     //  xL: Cursor position x Lower byte (1 dot/unit)
     //  xH: Cursor position x Upper byte (1 dot/unit)
+    let x2 = 0x00; // always be 0
     //  yL: Cursor position y Lower byte (8 dot/unit)
     //  yH: Cursor position y Upper byte(8 dot/unit)
+    let y2 = 0x00; // always be 0
     // Definable area:
     // 0 ≦ (xL + xH x 255) ≦ 255
     // 0 ≦ (yL + yH x 255) ≦ 3
     // Might be affected by the mixture mode.. this'll take some playing with
-    return this.writeBytes([0x1f, 0x24, x1, x2, y1, y2]);
+    return this.writeBytes([0x1f, 0x24, x, x2, y, y2]);
   }
   // speed: 0 -> 1
   // this.echo = (verse, speed) => {
-  echo(verse, speed) {
+  echo = async (verse, x, y, speed) => {
     if (this.disabled) return console.log(verse);
     if (!this.initialised) return;
     console.log(":: echo");
+    await this.setCursor(x, y);
     speed = typeof speed == "undefined" ? 1 : speed;
     return new Promise(resolve => {
       // console.log("Echoing to screen, pacedly..");
@@ -129,7 +140,7 @@ export default class Vdf {
         }
       }, (1 - speed) * 500); // 500 -> 0ms between each letter
     });
-  }
+  };
   setCode(set, code) {
     console.log(":: setKerning", set, code);
     return this.writeBytes([0x1b, 0x52, set, 0x1b, 0x74, code]);
@@ -176,7 +187,6 @@ export default class Vdf {
     ];
     width = 16;
     height = 16;
-
     /* prettier-ignore */
     // let bmpMyke = [
     //   [0, 0, 0, 1, 0, 0, 0],
@@ -188,7 +198,6 @@ export default class Vdf {
     // OOF - now that's an algorithm to figure out. I mean, they _have_ to be in
     // chunks of 8, even if the rows aren't long enough..
     // But, hol' up for a minute because I might not even be bothering with graphics.
-
     let heightBits = height / 8; // because.. bytes
     const setup = [
       0x1f,
@@ -208,7 +217,7 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  drawLine() {
+  drawLine(x, y, length) {
     //
     //
     //
@@ -232,7 +241,6 @@ export default class Vdf {
     //   ...blank,
     //   ...blank
     // ];
-
     //
     // OH FUCK
     // It draws them at 8 pixel vertical columns at a time
@@ -247,7 +255,9 @@ export default class Vdf {
     // 0 0 0 0 000000000000 0000000000000000
     // 0 0 0 0 000000000000 0000000000000000
     //
-    // Now this reaaaaaaally is a fucking algorithm to figure out. Holy satan.
+    // Maybe it'd be smarter to be like
+    // drawRect(x1,y1,x2,y2);
+    // drawRectDotty(x1,y1,x2,y2);
     //
     /* prettier-ignore */
     let bmp = [
@@ -275,17 +285,59 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  drawProgressBar(progressFraction) {}
+  drawBitmapProper(bmp) {
+    console.log("this is gonna be.. oh man");
+  }
+  drawRect = async (x1, y1, x2, y2) => {
+    console.log("These are gonna be.. sooo hard to figure out. Full circadian");
+    this.drawBitmapProper([]);
+  };
+  drawRectDotty = async (x1, y1, x2, y2) => {
+    console.log("These are gonna be.. sooo hard to figure out. Full circadian");
+    this.drawBitmapProper([]);
+  };
+  drawProgressBar = async fraction => {
+    //
+  };
+  drawVolumeBar = async (progress, fraction, duration) => {
+    await this.echo(`${progress}`, 0, 3, 0.9);
+    await this.echo(`${duration}`, 100, 3, 0.9);
+    // this.drawLine(30, 3, fraction * 70);
+    // this.drawRect(30, 3, 30 + fraction * 70, 3); //hmmm arrrghhh
+    // this.drawRectDotty(30 + fraction * 70, 3, 70 - fraction * 70);
+  };
   displaySongState = async state => {
+    this.clear();
     if (state) {
       console.log(state);
-      let { name, artist, progressFraction } = state;
-      await this.echo(`${name} - ${artist}`, 0.9);
+      let {
+        name,
+        artist,
+        progress_ms,
+        duration_ms,
+        progressFraction,
+        volume_percent,
+        volumeFraction
+      } = state;
+      await this.echo(`${name}`, 0, 0, 0.9);
+      await this.echo(`${artist}`, 0, 1, 0.9);
+      await this.echo(
+        `${msToTime(progress_ms)} / ${msToTime(duration_ms)}`,
+        0,
+        2,
+        0.9
+      );
       await this.drawProgressBar(progressFraction);
+      // await this.echo(`Volume: ${volume_percent}`, 0, 3, 0.9);
+      await this.drawVolumeBar(
+        msToTime(progress_ms),
+        volumeFraction,
+        msToTime(duration_ms)
+      );
     } else {
       console.log("No song playing");
       // Myke: there's a write mixture display mode. insert style and shit
-      await this.echo(`No song playing`, 0.9);
+      await this.echo(`No song playing`, 0, 0, 0.9);
     }
   };
 }

@@ -15,17 +15,9 @@ export default class extends EventEmitter {
     this.serverHtml = fs.readFileSync("./Server.html", "utf8");
     this.serverHtml = this.serverHtml.replace("{authoriseURL}", authoriseURL);
 
-    // Start ngrok service for our http server
-    (async () => {
-      const url = `${ip.address()}:${port}`;
-      const urlNgrok = await ngrok.connect({ port });
-      this.emit("init", { url, urlNgrok });
-    })().catch(e => {
-      console.error("Error", e);
-    });
-
     // Start http server, after a breather because.. ideally the dry run will work first
     setTimeout(() => {
+      console.log(":: Server: listen");
       const server = http.createServer(this.requestHandler);
       server.on("error", e => {
         return console.log(
@@ -37,6 +29,14 @@ export default class extends EventEmitter {
         if (e) {
           console.log(e);
         }
+      });
+      // Start ngrok service for our http server
+      (async () => {
+        const url = `${ip.address()}:${port}`;
+        const urlNgrok = await ngrok.connect({ port });
+        this.emit("init", { url, urlNgrok });
+      })().catch(e => {
+        console.error("Error", e);
       });
     }, serverTimeout);
   }

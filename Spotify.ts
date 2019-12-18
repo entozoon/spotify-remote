@@ -83,6 +83,7 @@ export default class extends EventEmitter {
           const { progress_ms } = data.body,
             { name, album, duration_ms } = data.body.item,
             { volume_percent } = data.body.device,
+            volumeFraction = volume_percent / 100,
             // artistName = artists ? artists[0].name : null,
             artist = album.artists.map(a => a.name).join(", "),
             albumName = album.name,
@@ -94,7 +95,8 @@ export default class extends EventEmitter {
               duration_ms,
               progress_ms,
               progressFraction,
-              volume_percent
+              volume_percent,
+              volumeFraction
             };
           return resolve(state);
         },
