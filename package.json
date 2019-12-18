@@ -9,7 +9,8 @@
     "dev-pi": "sudo npm run run-dist",
     "run-dist": "nodemon -e *.js ./dist/index.js",
     "build": "tsc",
-    "test-vfd": "nodemon -e *.js ./dist/test-vfd.js"
+    "test-vfd": "nodemon -e *.js ./dist/test-vfd.js",
+    "test-radar": "nodemon -e *.js ./dist/test-radar.js"
   },
   "author": "",
   "license": "ISC",
