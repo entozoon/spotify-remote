@@ -285,12 +285,19 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  drawBitmapProper(bmp) {
+  drawBitmapProper = (bmp, x, y) => {
     console.log("this is gonna be.. oh man");
-  }
+    // force fill 0 values for whatever x and y chunks it needs
+  };
   drawRect = async (x1, y1, x2, y2) => {
     console.log("These are gonna be.. sooo hard to figure out. Full circadian");
-    this.drawBitmapProper([]);
+    // test...
+    let bmp = [
+      [0, 1, 0],
+      [1, 0, 1],
+      [0, 1, 0]
+    ];
+    this.drawBitmapProper(bmp, 0, 0);
   };
   drawRectDotty = async (x1, y1, x2, y2) => {
     console.log("These are gonna be.. sooo hard to figure out. Full circadian");
