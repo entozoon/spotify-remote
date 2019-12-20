@@ -8,7 +8,6 @@ import { msToTime } from "./utils";
 // const parser = new Readline();
 // vfd.pipe(parser);
 // parser.on("data", line => console.log(`> ${line}`)); // won't happen tbh
-
 export default class Vdf {
   serial = null;
   initialised = false;
@@ -285,9 +284,64 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
+  // x (pixels), y (row)
   drawBitmapProper = (bmp, x, y) => {
-    console.log("this is gonna be.. oh man");
-    // force fill 0 values for whatever x and y chunks it needs
+    //
+    // ASSUMPTIONS (that may not be correct!)
+    //
+    //  - Any width is okay
+    //  - It magically handles multiple rows of 8 pixels
+    //  - You can write integers to the VFD, not just hex values
+    //
+    this.setCursor(x, y);
+    // Lump it up to vertical runs of 8
+    const width = bmp[0].length;
+    const height = Math.ceil(bmp.length / 8) * 8; // round up to nearest multiple of 8
+    const heightBits = Math.ceil(height / 8); // because a bytes is a column
+    // Force fill 0 values for whatever extra y pixels we've added
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (!bmp[y]) {
+          bmp[y] = Array(width).fill(0);
+        }
+      }
+    }
+    // Convert 2D array into a single run of bytes - each being an 8 pixel column. Woooooosh!
+    let verticalRun = [];
+    for (let row = 0; row < height; row += 8) {
+      for (let x = 0; x < width; x++) {
+        for (let y = row; y < row + 8; y++) {
+          verticalRun.push(bmp[y][x]);
+        }
+      }
+    }
+    // Convert each 8 bits into a hex byte
+    let verticalRunBytes = [];
+    let byteString = "";
+    verticalRun.forEach((p, i) => {
+      // Create a string "01010110"
+      byteString += "" + p;
+      if (byteString.length === 8) {
+        // if 8 long, convert to integer and push to array
+        verticalRunBytes.push(parseInt(byteString, 2));
+        // (I think integer is probably fine, like, 0x07 is the same as 7, right?
+        byteString = "";
+      }
+    });
+    const setup = [
+      0x1f,
+      0x28,
+      0x66,
+      0x11,
+      width % 256,
+      width / 256,
+      heightBits % 256,
+      heightBits / 256,
+      0x01
+    ];
+    const bytes = setup.concat(verticalRunBytes);
+    console.log(bytes);
+    return this.writeBytes(bytes);
   };
   drawRect = async (x1, y1, x2, y2) => {
     console.log("These are gonna be.. sooo hard to figure out. Full circadian");
@@ -300,8 +354,8 @@ export default class Vdf {
     this.drawBitmapProper(bmp, 0, 0);
   };
   drawRectDotty = async (x1, y1, x2, y2) => {
-    console.log("These are gonna be.. sooo hard to figure out. Full circadian");
-    this.drawBitmapProper([]);
+    // console.log("These are gonna be.. sooo hard to figure out. Full circadian");
+    // this.drawBitmapProper([]);
   };
   drawProgressBar = async fraction => {
     //
