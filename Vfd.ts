@@ -86,6 +86,10 @@ export default class Vdf {
       0x02 // select scroll mode (0x01 over, 0x02 vert, 0x03 horiz)
     ]);
   }
+  setReverse(reverse) {
+    // 0 or 1
+    return this.writeBytes[(0x1f, 0x72, val)];
+  }
   // this.setBrightness = level1to8 => {
   setBrightness(level1to8) {
     console.log(":: setBrightness", level1to8);
@@ -292,6 +296,7 @@ export default class Vdf {
     //  - Any width is okay
     //  - It magically handles multiple rows of 8 pixels
     //  - You can write integers to the VFD, not just hex values
+    //  - xH and yH need math.floor
     //
     this.setCursor(x, y);
     // Lump it up to vertical runs of 8
@@ -333,10 +338,14 @@ export default class Vdf {
       0x28,
       0x66,
       0x11,
-      width % 256,
-      width / 256,
-      heightBits % 256,
-      heightBits / 256,
+      width % 256, // xL
+      Math.floor(width / 256), // xH      (added floor because.. it just must be)
+      heightBits % 256, // yL
+      Math.floor(heightBits / 256), // yH (added floor because.. it just must be)
+      //  xL: Bit image X size lower byte ( by 1dot)
+      //  xH: Bit image X size upper byte ( by 1dot)
+      //  yL: Bit image Y size lower byte ( by 8dots)
+      //  yH: Bit image Y size upper byte ( by 8dots)
       0x01
     ];
     const bytes = setup.concat(verticalRunBytes);
