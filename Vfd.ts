@@ -3,7 +3,7 @@
 //
 // import * as SerialPort from "serialport";
 const SerialPort = require("serialport");
-import { msToTime } from "./utils";
+import { msToTime, logBmp, logVerticalRun } from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
 // vfd.pipe(parser);
@@ -86,9 +86,9 @@ export default class Vdf {
       0x02 // select scroll mode (0x01 over, 0x02 vert, 0x03 horiz)
     ]);
   }
-  setReverse(reverse) {
+  setInverse(binary = 1) {
     // 0 or 1
-    return this.writeBytes[(0x1f, 0x72, val)];
+    return this.writeBytes([0x1f, 0x72, binary]);
   }
   // this.setBrightness = level1to8 => {
   setBrightness(level1to8) {
@@ -220,87 +220,89 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  drawLine(x, y, length) {
-    //
-    //
-    //
-    // PROBLEM
-    // this draws at the current cursor!
-    //
-    //
-    // REALISTICALLY
-    // this might just use bitmap function above, get that workin
-    //
-    // 11111111111111111010101010101010
-    // let bmp = [0xff, 0xff, 0x55, 0xaa];
-    // let blank = [0x00, 0x00, 0x00, 0x00];
-    // bmp = [
-    //   ...bmp,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank
-    // ];
-    //
-    // OH FUCK
-    // It draws them at 8 pixel vertical columns at a time
-    // deja frickin vous
-    //
-    // 1 1 1 1 111111111111 1010101010101010
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    //
-    // Maybe it'd be smarter to be like
-    // drawRect(x1,y1,x2,y2);
-    // drawRectDotty(x1,y1,x2,y2);
-    //
-    /* prettier-ignore */
-    let bmp = [
-      0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80, 0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,
-    ];
-    // Gotta like, be a block of 8 high right? maybe not?
-    const width = 32;
-    const height = 8;
-    let heightBits = Math.ceil(height / 8); // because.. bytes
-    const setup = [
-      0x1f,
-      0x28,
-      0x66,
-      0x11,
-      width % 256,
-      width / 256,
-      heightBits % 256,
-      heightBits / 256,
-      0x01
-    ];
-    const bytes = setup.concat(bmp);
-    // for (let i = 0; i < X * Y; i++) {
-    //   VFD.write(bmp[i]);
-    // }
-    console.log(bytes);
-    return this.writeBytes(bytes);
-  }
+  // drawLine(x, y, length) {
+  //   //
+  //   //
+  //   //
+  //   // PROBLEM
+  //   // this draws at the current cursor!
+  //   //
+  //   //
+  //   // REALISTICALLY
+  //   // this might just use bitmap function above, get that workin
+  //   //
+  //   // 11111111111111111010101010101010
+  //   // let bmp = [0xff, 0xff, 0x55, 0xaa];
+  //   // let blank = [0x00, 0x00, 0x00, 0x00];
+  //   // bmp = [
+  //   //   ...bmp,
+  //   //   ...blank,
+  //   //   ...blank,
+  //   //   ...blank,
+  //   //   ...blank,
+  //   //   ...blank,
+  //   //   ...blank,
+  //   //   ...blank
+  //   // ];
+  //   //
+  //   // OH FUCK
+  //   // It draws them at 8 pixel vertical columns at a time
+  //   // deja frickin vous
+  //   //
+  //   // 1 1 1 1 111111111111 1010101010101010
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   // 0 0 0 0 000000000000 0000000000000000
+  //   //
+  //   // Maybe it'd be smarter to be like
+  //   // drawRect(x1,y1,x2,y2);
+  //   // drawRectDotty(x1,y1,x2,y2);
+  //   //
+  //   /* prettier-ignore */
+  //   let bmp = [
+  //     0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80, 0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,
+  //   ];
+  //   // Gotta like, be a block of 8 high right? maybe not?
+  //   const width = 32;
+  //   const height = 8;
+  //   let heightBits = Math.ceil(height / 8); // because.. bytes
+  //   const setup = [
+  //     0x1f,
+  //     0x28,
+  //     0x66,
+  //     0x11,
+  //     width % 256,
+  //     width / 256,
+  //     heightBits % 256,
+  //     heightBits / 256,
+  //     0x01
+  //   ];
+  //   const bytes = setup.concat(bmp);
+  //   // for (let i = 0; i < X * Y; i++) {
+  //   //   VFD.write(bmp[i]);
+  //   // }
+  //   console.log(bytes);
+  //   return this.writeBytes(bytes);
+  // }
   // x (pixels), y (row)
-  drawBitmapProper = (bmp, x, y) => {
+  drawBitmapProper = async (bmp, x, y) => {
     //
     // ASSUMPTIONS (that may not be correct!)
     //
     //  - Any width is okay
-    //  - It magically handles multiple rows of 8 pixels
+    //  - It magically handles multiple rows of 8 pixels (I THINK THIS IS WRONG)
+    //    Starting to think it doesn't have to be 8 pixels at all
     //  - You can write integers to the VFD, not just hex values
     //  - xH and yH need math.floor
     //
-    this.setCursor(x, y);
+    await this.setCursor(x, y);
     // Lump it up to vertical runs of 8
-    const width = bmp[0].length;
+    // const width = bmp[0].length;
+    const width = Math.ceil(bmp[0].length / 8) * 8; // round up to nearest multiple of 8
     const height = Math.ceil(bmp.length / 8) * 8; // round up to nearest multiple of 8
     const heightBits = Math.ceil(height / 8); // because a bytes is a column
     // Force fill 0 values for whatever extra y pixels we've added
@@ -309,17 +311,41 @@ export default class Vdf {
         if (!bmp[y]) {
           bmp[y] = Array(width).fill(0);
         }
+        if (!bmp[y][x]) {
+          bmp[y][x] = 0;
+        }
       }
     }
+    // console.log(bmp);
+    logBmp(bmp);
+    console.log({ x, y, width, height, heightBits });
+
     // Convert 2D array into a single run of bytes - each being an 8 pixel column. Woooooosh!
     let verticalRun = [];
     for (let row = 0; row < height; row += 8) {
       for (let x = 0; x < width; x++) {
         for (let y = row; y < row + 8; y++) {
           verticalRun.push(bmp[y][x]);
+          // process.stdout.write(bmp[row + y][x] ? "1" : "-");
+          // process.stdout.write(`${x},${row + y} `);
         }
+        // process.stdout.write("\n");
       }
     }
+    // for (let x = 0; x < width; x++) {
+    //   for (let y = 0; y < height; y++) {
+    //     verticalRun.push(bmp[y][x]);
+    //     process.stdout.write(bmp[y][x] ? "1" : "-");
+    //     // process.stdout.write(`${x},${row + y} `);
+    //   }
+    //   process.stdout.write("\n");
+    // }
+    console.log(
+      "this is right but it goes along, drawing the vertical columns for too long horizontal when it should have popped to line below. perhaps width is being set wrong? or maybe not that at all. Like, it should indeed be going along for 16 columns"
+    );
+    // console.log(JSON.stringify(verticalRun));
+    // verticalRun[1] = 0;
+    console.log(logVerticalRun(verticalRun, width, height));
     // Convert each 8 bits into a hex byte
     let verticalRunBytes = [];
     let byteString = "";
@@ -333,6 +359,8 @@ export default class Vdf {
         byteString = "";
       }
     });
+    console.log(JSON.stringify(verticalRunBytes));
+
     const setup = [
       0x1f,
       0x28,
@@ -349,22 +377,27 @@ export default class Vdf {
       0x01
     ];
     const bytes = setup.concat(verticalRunBytes);
-    console.log(bytes);
+    // console.log(bytes);
     return this.writeBytes(bytes);
   };
-  drawRect = async (x1, y1, x2, y2) => {
-    console.log("These are gonna be.. sooo hard to figure out. Full circadian");
-    // test...
-    let bmp = [
-      [0, 1, 0],
-      [1, 0, 1],
-      [0, 1, 0]
-    ];
-    this.drawBitmapProper(bmp, 0, 0);
+  drawRect = async (x, y, width, height) => {
+    // const width = x2 - x1,
+    //   height = y2 - y1;
+    let bmp = [];
+    //[[0, 1, 0],
+    // [1, 0, 1],
+    // [0, 1, 0]]
+    for (let y = 0; y < height; y++) {
+      bmp[y] = Array(width).fill(0);
+      for (let x = 0; x < width; x++) {
+        bmp[y][x] = 1;
+      }
+    }
+    return this.drawBitmapProper(bmp, x, y);
   };
   drawRectDotty = async (x1, y1, x2, y2) => {
-    // console.log("These are gonna be.. sooo hard to figure out. Full circadian");
-    // this.drawBitmapProper([]);
+    // You know what'd be sick
+    // Is if it kinda.. had a halftone gradient left to right?
   };
   drawProgressBar = async fraction => {
     //
