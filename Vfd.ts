@@ -341,7 +341,7 @@ export default class Vdf {
     //   process.stdout.write("\n");
     // }
     console.log(
-      "this is right but it goes along, drawing the vertical columns for too long horizontal when it should have popped to line below. perhaps width is being set wrong? or maybe not that at all. Like, it should indeed be going along for 16 columns"
+      "this is right but it goes along, drawing the vertical columns for too long horizontal when it should have popped to line below. perhaps width is being set wrong? or maybe not that at all. Like, it should indeed be going along for 16 columns.. but I mean, it must be the run right? like, it goes along okay but then the columns start beginning with the row below"
     );
     // console.log(JSON.stringify(verticalRun));
     // verticalRun[1] = 0;
@@ -354,13 +354,15 @@ export default class Vdf {
       byteString += "" + p;
       if (byteString.length === 8) {
         // if 8 long, convert to integer and push to array
+        console.log(byteString);
+        // console.log(parseInt(byteString, 2));
         verticalRunBytes.push(parseInt(byteString, 2));
         // (I think integer is probably fine, like, 0x07 is the same as 7, right?
         byteString = "";
       }
     });
     console.log(JSON.stringify(verticalRunBytes));
-
+    console.log("that said, it all looks legit to me up to here");
     const setup = [
       0x1f,
       0x28,
@@ -377,7 +379,7 @@ export default class Vdf {
       0x01
     ];
     const bytes = setup.concat(verticalRunBytes);
-    // console.log(bytes);
+    console.log(JSON.stringify(bytes));
     return this.writeBytes(bytes);
   };
   drawRect = async (x, y, width, height) => {
