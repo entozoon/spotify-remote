@@ -299,7 +299,7 @@ export default class Vdf {
   //   return this.writeBytes(bytes);
   // }
   // x (pixels), y (row)
-  drawBitmapProper = async (bmp, x, y) => {
+  drawBitmapProper = async ({ bmp, x, y, mode }) => {
     //
     // ASSUMPTIONS (that may not be correct!)
     //
@@ -397,6 +397,17 @@ export default class Vdf {
       }
     }
     // console.log(bmp);
+
+    if (mode == "halftone") {
+      // It probably has to be like, generate the same pattern every time so it doesn't randomise
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          // Complete guess! Nailed it!
+          bmp[y][x] = bmp[y][x] ? ((x + y) % 2 == 0 ? 1 : 0) : 0;
+        }
+      }
+    }
+
     logBmp(bmp);
 
     console.log({ x, y, width, height, heightBits });
@@ -430,9 +441,7 @@ export default class Vdf {
     //   }
     //   process.stdout.write("\n");
     // }
-    console.log(
-      "this is right but it goes along, drawing the vertical columns for too long horizontal when it should have popped to line below. perhaps width is being set wrong? or maybe not that at all. Like, it should indeed be going along for 16 columns.. but I mean, it must be the run right? like, it goes along okay but then the columns start beginning with the row below"
-    );
+    // console.log("this is right but it goes along, drawing the vertical columns for too long horizontal when it should have popped to line below. perhaps width is being set wrong? or maybe not that at all. Like, it should indeed be going along for 16 columns.. but I mean, it must be the run right? like, it goes along okay but then the columns start beginning with the row below");
     // console.log(JSON.stringify(verticalRun));
     // verticalRun[1] = 0;
     // Convert each 8 bits into a hex byte
@@ -504,7 +513,7 @@ export default class Vdf {
     // logVerticalRun(logoBinary, 64, 32);
 
     console.log(
-      "\n\n Okay, so we've also got this whatTheFuck function.. lifted from Java docs. It looks to me to output the same as my functions (but just in an absolutely batty coding style) \n"
+      "Okay, so we've also got this whatTheFuck function.. lifted from Java docs. It looks to me to output the same as my functions (but just in an absolutely batty coding style)"
     );
 
     const whatTheFuckBytes = whatTheFuckIsThis(bmp, width, height);
@@ -518,7 +527,7 @@ export default class Vdf {
 
     return this.writeBytes(bytes);
   };
-  drawRect = async (x, y, width, height) => {
+  drawRect = async ({ x, y, width, height, mode }) => {
     console.log(":: drawRect");
     // const width = x2 - x1,
     //   height = y2 - y1;
@@ -532,7 +541,7 @@ export default class Vdf {
         bmp[y][x] = 1;
       }
     }
-    return this.drawBitmapProper(bmp, x, y);
+    return this.drawBitmapProper({ bmp, x, y, mode });
   };
   drawRectDotty = async (x1, y1, x2, y2) => {
     // You know what'd be sick

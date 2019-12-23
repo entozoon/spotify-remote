@@ -23,7 +23,7 @@ const test = async () => {
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
-  await vfd.drawRect(0, 0, 9, 9); // *******
+  await vfd.drawRect({ x: 0, y: 0, width: 9, height: 9, mode: "halftone" }); // *******
   // await vfd.setCursor(15, 1);
   // await vfd.drawLine(0, 16, 0, 0);
   // await vfd.drawRectDotty(50, 16, 80, 24);
