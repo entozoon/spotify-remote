@@ -4,9 +4,16 @@
 // https://github.com/entozoon/noritake-vfd/
 //
 import Vfd from "./Vfd";
+
+const isDesktop = process.argv[2] && process.argv[2] === "desktop";
+
 const test = async () => {
   const vfd = new Vfd();
-  await vfd.init();
+  await vfd.init().catch(e => {
+    console.log("Error::VFD can't init -", e);
+    vfd.disable(); // continues on after this point but be reet
+    if (!isDesktop) return;
+  });
   await vfd.resetVFD();
   // await vfd.setInverse(); // yeah? YEAH?
   await vfd.resetFont();
@@ -16,7 +23,7 @@ const test = async () => {
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
-  await vfd.drawRect(9, 9, 9, 9); // *******
+  await vfd.drawRect(0, 0, 9, 9); // *******
   // await vfd.setCursor(15, 1);
   // await vfd.drawLine(0, 16, 0, 0);
   // await vfd.drawRectDotty(50, 16, 80, 24);

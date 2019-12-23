@@ -27,3 +27,6 @@ export const logVerticalRun = (run, width, height) => {
     process.stdout.write("\n");
   }
 };
+
+export const numberToBinary = (number, length = 0) =>
+  number.toString(2).padStart(length, "0");

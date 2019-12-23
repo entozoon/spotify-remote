@@ -10,6 +10,7 @@
     "run-dist": "nodemon -e *.js ./dist/index.js",
     "build": "tsc",
     "test-vfd": "nodemon -e *.js ./dist/test-vfd.js",
+    "test-vfd-desktop": "nodemon -e *.js ./dist/test-vfd.js desktop",
     "test-radar": "nodemon -e *.js ./dist/test-radar.js"
   },
   "author": "",

@@ -3,7 +3,7 @@
 //
 // import * as SerialPort from "serialport";
 const SerialPort = require("serialport");
-import { msToTime, logBmp, logVerticalRun } from "./utils";
+import { msToTime, logBmp, logVerticalRun, numberToBinary } from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
 // vfd.pipe(parser);
@@ -55,7 +55,9 @@ export default class Vdf {
     });
   }
   close() {
-    this.serial.close();
+    if (!this.disabled) {
+      this.serial.close();
+    }
   }
   disable() {
     this.disabled = true;
@@ -296,9 +298,45 @@ export default class Vdf {
     //  - Any width is okay
     //  - It magically handles multiple rows of 8 pixels (I THINK THIS IS WRONG)
     //    Starting to think it doesn't have to be 8 pixels at all
+    //   and maybe vertically it draws the full column?
     //  - You can write integers to the VFD, not just hex values
     //  - xH and yH need math.floor
     //
+
+    /* prettier-ignore */
+    // bmp = [
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
+    // ];
+
     await this.setCursor(x, y);
     // Lump it up to vertical runs of 8
     // const width = bmp[0].length;
@@ -321,17 +359,25 @@ export default class Vdf {
     console.log({ x, y, width, height, heightBits });
 
     // Convert 2D array into a single run of bytes - each being an 8 pixel column. Woooooosh!
+    // let verticalRun = [];
+    // for (let row = 0; row < height; row += 8) {
+    //   for (let x = 0; x < width; x++) {
+    //     for (let y = row; y < row + 8; y++) {
+    //       verticalRun.push(bmp[y][x]);
+    //       // process.stdout.write(bmp[row + y][x] ? "1" : "-");
+    //       // process.stdout.write(`${x},${row + y} `);
+    //     }
+    //     // process.stdout.write("\n");
+    //   }
+    // }
+    // Convert 2D array into a single run of bytes - each being the full vertical column
     let verticalRun = [];
-    for (let row = 0; row < height; row += 8) {
-      for (let x = 0; x < width; x++) {
-        for (let y = row; y < row + 8; y++) {
-          verticalRun.push(bmp[y][x]);
-          // process.stdout.write(bmp[row + y][x] ? "1" : "-");
-          // process.stdout.write(`${x},${row + y} `);
-        }
-        // process.stdout.write("\n");
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        verticalRun.push(bmp[y][x]);
       }
     }
+
     // for (let x = 0; x < width; x++) {
     //   for (let y = 0; y < height; y++) {
     //     verticalRun.push(bmp[y][x]);
@@ -345,7 +391,7 @@ export default class Vdf {
     );
     // console.log(JSON.stringify(verticalRun));
     // verticalRun[1] = 0;
-    console.log(logVerticalRun(verticalRun, width, height));
+    logVerticalRun(verticalRun, width, height);
     // Convert each 8 bits into a hex byte
     let verticalRunBytes = [];
     let byteString = "";
@@ -354,9 +400,10 @@ export default class Vdf {
       byteString += "" + p;
       if (byteString.length === 8) {
         // if 8 long, convert to integer and push to array
-        console.log(byteString);
         // console.log(parseInt(byteString, 2));
         verticalRunBytes.push(parseInt(byteString, 2));
+        process.stdout.write("\n" + byteString);
+        process.stdout.write(" " + parseInt(byteString, 2));
         // (I think integer is probably fine, like, 0x07 is the same as 7, right?
         byteString = "";
       }
@@ -368,6 +415,7 @@ export default class Vdf {
       0x28,
       0x66,
       0x11,
+      // Pretty certain this is all correct, re apf200_r201et.pdf and http://tpcg.io/pGmbavGR
       width % 256, // xL
       Math.floor(width / 256), // xH      (added floor because.. it just must be)
       heightBits % 256, // yL
@@ -380,9 +428,41 @@ export default class Vdf {
     ];
     const bytes = setup.concat(verticalRunBytes);
     console.log(JSON.stringify(bytes));
+
+    console.log(
+      "This is an image a guy feeds in as an example. I don't think it's columns of 8 at all!"
+    );
+    /* prettier-ignore */
+    let logo = [ 0xff,0xf0,0x0f,0xff,0xff,0x80,0x01,0xff,0xfe,0x00,0x00,0x7f,0xfc,0x00,0x00,0x3f,
+      0xf8,0x00,0x00,0x1f,0xf0,0x00,0x00,0x0f,0xe0,0x0f,0xf0,0x07,0xc0,0x3f,0xfc,0x07,
+      0xc0,0x7f,0xfe,0x03,0x80,0xff,0xff,0x01,0x81,0xff,0xff,0x01,0x81,0xff,0xff,0x81,
+      0x01,0xfc,0x3f,0x81,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,
+      0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,
+      0x03,0xfc,0x3f,0x80,0x81,0xfc,0x3f,0x81,0x81,0xff,0xff,0x81,0x80,0xff,0xff,0x01,
+      0xc0,0x7f,0xfe,0x03,0xc0,0x7f,0xfe,0x03,0xe0,0x3f,0xf8,0x07,0xf0,0x0f,0xf0,0x0f,
+      0xf0,0x07,0xe0,0x1f,0xf8,0x03,0xc0,0x1f,0xfc,0x00,0x00,0x3f,0xfe,0x00,0x00,0x7f,
+      0xff,0x80,0x01,0xff,0xff,0xc0,0x03,0xff,0xff,0x80,0x01,0xff,0xfe,0x00,0x00,0x7f,
+      0xfe,0x00,0x00,0x7f,0xf8,0x03,0x80,0x1f,0xf0,0x07,0xe0,0x1f,0xf0,0x0f,0xf0,0x0f,
+      0xe0,0x3f,0xf8,0x07,0xc0,0x7f,0xfc,0x03,0xc0,0x7f,0xfe,0x03,0x80,0xff,0xff,0x01,
+      0x81,0xff,0xff,0x81,0x81,0xfc,0x3f,0x81,0x03,0xfc,0x3f,0x80,0x03,0xfc,0x3f,0xc0,
+      0x03,0xe0,0x07,0xc0,0x03,0xe0,0x07,0xc0,0x03,0xe0,0x07,0xc0,0x03,0xe0,0x07,0xc0,
+      0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x01,0xfc,0x3f,0x81,0x81,0xff,0xff,0x81,
+      0x81,0xff,0xff,0x81,0x80,0xff,0xff,0x01,0xc0,0x7f,0xfe,0x03,0xc0,0x1f,0xf8,0x07,
+      0xe0,0x0f,0xf0,0x07,0xf0,0x00,0x00,0x0f,0xf8,0x00,0x00,0x1f,0xfc,0x00,0x00,0x3f,
+      0xfe, 0x00, 0x00, 0x7f, 0xff, 0x80, 0x01, 0xff, 0xff, 0xf8, 0x1f, 0xff]
+    let logoBinary = [];
+    logo.forEach((byte, i) => {
+      let binString = `${numberToBinary(byte, 8)}`;
+      binString.split("").forEach((c, ci) => {
+        logoBinary.push(parseInt(c));
+      });
+    });
+    // console.log(logoBinary);
+    logVerticalRun(logoBinary, 64, 32);
     return this.writeBytes(bytes);
   };
   drawRect = async (x, y, width, height) => {
+    console.log(":: drawRect");
     // const width = x2 - x1,
     //   height = y2 - y1;
     let bmp = [];
