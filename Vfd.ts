@@ -3,7 +3,15 @@
 //
 // import * as SerialPort from "serialport";
 const SerialPort = require("serialport");
-import { msToTime, logBmp, logVerticalRun, numberToBinary } from "./utils";
+import {
+  msToTime,
+  logBmp,
+  logVerticalRun,
+  numberToBinary,
+  whatTheFuckIsThis,
+  logVerticalRunBytes,
+  convertVerticalRunBytesToVerticalRun
+} from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
 // vfd.pipe(parser);
@@ -336,6 +344,40 @@ export default class Vdf {
     //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
     //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
     // ];
+    bmp = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+    [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1],
+    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
+    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1],
+    [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
+    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1],
+    [1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1],
+    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
+    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
+    [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1],
+    [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],]
 
     await this.setCursor(x, y);
     // Lump it up to vertical runs of 8
@@ -356,6 +398,7 @@ export default class Vdf {
     }
     // console.log(bmp);
     logBmp(bmp);
+
     console.log({ x, y, width, height, heightBits });
 
     // Convert 2D array into a single run of bytes - each being an 8 pixel column. Woooooosh!
@@ -377,6 +420,7 @@ export default class Vdf {
         verticalRun.push(bmp[y][x]);
       }
     }
+    logVerticalRun(verticalRun, width, height);
 
     // for (let x = 0; x < width; x++) {
     //   for (let y = 0; y < height; y++) {
@@ -391,7 +435,6 @@ export default class Vdf {
     );
     // console.log(JSON.stringify(verticalRun));
     // verticalRun[1] = 0;
-    logVerticalRun(verticalRun, width, height);
     // Convert each 8 bits into a hex byte
     let verticalRunBytes = [];
     let byteString = "";
@@ -402,13 +445,13 @@ export default class Vdf {
         // if 8 long, convert to integer and push to array
         // console.log(parseInt(byteString, 2));
         verticalRunBytes.push(parseInt(byteString, 2));
-        process.stdout.write("\n" + byteString);
-        process.stdout.write(" " + parseInt(byteString, 2));
+        // process.stdout.write("\n" + byteString);
+        // process.stdout.write(" " + parseInt(byteString, 2));
         // (I think integer is probably fine, like, 0x07 is the same as 7, right?
         byteString = "";
       }
     });
-    console.log(JSON.stringify(verticalRunBytes));
+    // console.log(JSON.stringify(verticalRunBytes));
     console.log("that said, it all looks legit to me up to here");
     const setup = [
       0x1f,
@@ -427,7 +470,7 @@ export default class Vdf {
       0x01
     ];
     const bytes = setup.concat(verticalRunBytes);
-    console.log(JSON.stringify(bytes));
+    // console.log(JSON.stringify(bytes));
 
     console.log(
       "This is an image a guy feeds in as an example. I don't think it's columns of 8 at all!"
@@ -458,7 +501,21 @@ export default class Vdf {
       });
     });
     // console.log(logoBinary);
-    logVerticalRun(logoBinary, 64, 32);
+    // logVerticalRun(logoBinary, 64, 32);
+
+    console.log(
+      "\n\n Okay, so we've also got this whatTheFuck function.. lifted from Java docs. It looks to me to output the same as my functions (but just in an absolutely batty coding style) \n"
+    );
+
+    const whatTheFuckBytes = whatTheFuckIsThis(bmp, width, height);
+    const whatTheFuckBytesAsVerticalRun = convertVerticalRunBytesToVerticalRun(
+      whatTheFuckBytes
+    );
+    // console.log(JSON.stringify(whatTheFuckBytes));
+    // console.log(JSON.stringify(whatTheFuckBytesAsVerticalRun));
+    logVerticalRun(whatTheFuckBytesAsVerticalRun, width, height);
+    // logVerticalRunBytes(whatTheFuck, 8);
+
     return this.writeBytes(bytes);
   };
   drawRect = async (x, y, width, height) => {
