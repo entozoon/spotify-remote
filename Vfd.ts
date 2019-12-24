@@ -211,7 +211,7 @@ export default class Vdf {
       [0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
     ];
-    this.drawBitmap({ bmp, x: 0, y: 0, mode: "halftone" });
+    return this.drawBitmap({ bmp, x: 0, y: 0, mode: "halftone" });
   };
   // x (pixels), y (row)
   drawBitmap = async ({ bmp, x, y, mode }) => {
@@ -227,14 +227,12 @@ export default class Vdf {
     //  - You can write integers to the VFD, not just hex values
     //  - xH and yH need math.floor
     //
-
     // Force a height increase to multiple of 8, with empty pixels
     const width = bmp[0].length;
     const height = Math.ceil(bmp.length / 8) * 8;
     const heightBits = Math.ceil(height / 8);
     bmp = bmpFillToGivenDimensions({ bmp, width, height });
     // console.log({ x, y, width, height, heightBits });
-
     if (mode == "halftone") {
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -245,17 +243,13 @@ export default class Vdf {
     } else if (mode == "gradient") {
       // It probably has to be like, generate the same pattern every time so it doesn't randomise
     }
-
     ///////////////////////
     logBmp(bmp);
     ///////////////////////
-
     // Create array of vertical columns of pixels
     let run = bmpToVerticalRun({ bmp, width, height });
-
     // Chunk columns into groups of 8 pixels and convert each to a byte value
     let runBytes = runToRunBytes({ run, width, height });
-
     const setup = [
       0x1f,
       0x28,
@@ -267,13 +261,11 @@ export default class Vdf {
       Math.floor(heightBits / 256),
       0x01
     ];
-
     const bytes = setup.concat(runBytes);
-    // console.log(JSON.stringify(bytes));
+    console.log(JSON.stringify(bytes));
     await this.setCursor(0, 0);
     return this.writeBytes(bytes);
   };
-
   drawRect = async ({ x, y, width, height, mode }) => {
     console.log(":: drawRect");
     // const width = x2 - x1,
