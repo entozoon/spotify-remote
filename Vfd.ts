@@ -211,10 +211,11 @@ export default class Vdf {
       [0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
     ];
-    return this.drawBitmap({ bmp, x: 0, y: 0, mode: "halftone" });
+    return this.drawBitmap({ bmp, x: 20, y: 0, mode: "halftone" });
   };
   // x (pixels), y (row)
   drawBitmap = async ({ bmp, x, y, mode }) => {
+    console.log(":: drawBitmap");
     //
     // HOW IT WORKS
     // It draws vertical columns top to bottom, using a big long run of bytes.
@@ -240,6 +241,28 @@ export default class Vdf {
           bmp[y][x] = bmp[y][x] ? ((x + y) % 2 == 0 ? 1 : 0) : 0;
         }
       }
+    } else if (mode == "quartertone") {
+      let seed = 0;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          bmp[y][x] = bmp[y][x] ? (++seed % 4 == 0 ? 1 : 0) : 0;
+        }
+      }
+    } else if (mode == "random") {
+      var seedrandom = require("seedrandom");
+      let seed = 0;
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          bmp[y][x] = bmp[y][x]
+            ? // ? Math.sin(x * 99999 + y * 99999) > 0.1
+              // Math.sin((seed += 1000)) * 10000 > 0.4
+              ++seed % 4 == 0
+              ? 1
+              : 0
+            : 0;
+        }
+      }
     } else if (mode == "gradient") {
       // It probably has to be like, generate the same pattern every time so it doesn't randomise
     }
@@ -263,13 +286,11 @@ export default class Vdf {
     ];
     const bytes = setup.concat(runBytes);
     console.log(JSON.stringify(bytes));
-    await this.setCursor(0, 0);
+    await this.setCursor(x, y);
     return this.writeBytes(bytes);
   };
   drawRect = async ({ x, y, width, height, mode }) => {
     console.log(":: drawRect");
-    // const width = x2 - x1,
-    //   height = y2 - y1;
     let bmp = [];
     //[[0, 1, 0],
     // [1, 0, 1],

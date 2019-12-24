@@ -21,6 +21,7 @@
     "lodash.chunk": "^4.2.0",
     "ngrok": "^3.2.5",
     "nodemon": "^2.0.2",
+    "seedrandom": "^3.0.5",
     "serialport": "^8.0.5",
     "spotify-web-api-node": "^4.0.0",
     "typescript": "^3.7.3"

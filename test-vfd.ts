@@ -24,8 +24,15 @@ const test = async () => {
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
-  await vfd.drawBitmapTest();
-  // await vfd.drawRect({ x: 0, y: 0, width: 9, height: 9, mode: "halftone" });
+  // await vfd.drawBitmapTest();
+  await vfd.drawRect({ x: 20, y: 3, width: 50, height: 8, mode: "random" });
+  await vfd.drawRect({
+    x: 70,
+    y: 3,
+    width: 30,
+    height: 8,
+    mode: "quartertone"
+  });
   // await vfd.setCursor(15, 1);
   // await vfd.drawLine(0, 16, 0, 0);
   // await vfd.drawRectDotty(50, 16, 80, 24);
