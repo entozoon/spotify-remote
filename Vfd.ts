@@ -10,7 +10,10 @@ import {
   numberToBinary,
   whatTheFuckIsThis,
   logVerticalRunBytes,
-  convertVerticalRunBytesToVerticalRun
+  convertVerticalRunBytesToVerticalRun,
+  verticalRunToVerticalRunBytes,
+  runToRunBytes,
+  bmpToVerticalRun
 } from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
@@ -230,74 +233,127 @@ export default class Vdf {
     console.log(bytes);
     return this.writeBytes(bytes);
   }
-  // drawLine(x, y, length) {
-  //   //
-  //   //
-  //   //
-  //   // PROBLEM
-  //   // this draws at the current cursor!
-  //   //
-  //   //
-  //   // REALISTICALLY
-  //   // this might just use bitmap function above, get that workin
-  //   //
-  //   // 11111111111111111010101010101010
-  //   // let bmp = [0xff, 0xff, 0x55, 0xaa];
-  //   // let blank = [0x00, 0x00, 0x00, 0x00];
-  //   // bmp = [
-  //   //   ...bmp,
-  //   //   ...blank,
-  //   //   ...blank,
-  //   //   ...blank,
-  //   //   ...blank,
-  //   //   ...blank,
-  //   //   ...blank,
-  //   //   ...blank
-  //   // ];
-  //   //
-  //   // OH FUCK
-  //   // It draws them at 8 pixel vertical columns at a time
-  //   // deja frickin vous
-  //   //
-  //   // 1 1 1 1 111111111111 1010101010101010
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   // 0 0 0 0 000000000000 0000000000000000
-  //   //
-  //   // Maybe it'd be smarter to be like
-  //   // drawRect(x1,y1,x2,y2);
-  //   // drawRectDotty(x1,y1,x2,y2);
-  //   //
-  //   /* prettier-ignore */
-  //   let bmp = [
-  //     0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80, 0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,
-  //   ];
-  //   // Gotta like, be a block of 8 high right? maybe not?
-  //   const width = 32;
-  //   const height = 8;
-  //   let heightBits = Math.ceil(height / 8); // because.. bytes
-  //   const setup = [
-  //     0x1f,
-  //     0x28,
-  //     0x66,
-  //     0x11,
-  //     width % 256,
-  //     width / 256,
-  //     heightBits % 256,
-  //     heightBits / 256,
-  //     0x01
-  //   ];
-  //   const bytes = setup.concat(bmp);
-  //   // for (let i = 0; i < X * Y; i++) {
-  //   //   VFD.write(bmp[i]);
-  //   // }
-  //   console.log(bytes);
-  //   return this.writeBytes(bytes);
-  // }
+  drawTest() {
+    //
+    // 11111111111111111010101010101010
+    // let bmp = [0xff, 0xff, 0x55, 0xaa];
+    // let blank = [0x00, 0x00, 0x00, 0x00];
+    // bmp = [
+    //   ...bmp,
+    //   ...blank,
+    //   ...blank,
+    //   ...blank,
+    //   ...blank,
+    //   ...blank,
+    //   ...blank,
+    //   ...blank
+    // ];
+    //
+    // OH FUCK
+    // It draws them at 8 pixel vertical columns at a time
+    // deja frickin vous
+    //
+    // 1 1 1 1 111111111111 1010101010101010
+    // 0 0 0 0 000000000000 0000000000000000
+    // 0 0 0 0 000000000000 0000000000000000
+    // 0 0 0 0 000000000000 0000000000000000
+    // 0 0 0 0 000000000000 0000000000000000
+    // 0 0 0 0 000000000000 0000000000000000
+    // 0 0 0 0 000000000000 0000000000000000
+    // 0 0 0 0 000000000000 0000000000000000
+    //
+    // 00000000000011110000000000000000
+    // 00000000010000000010000000000000
+    // 00000001000110001100100000000000
+    // 00000010000000000000001000000000
+    // 00000000100001110001100000000000
+    // 00000000001100000010000000000000
+    // 00000000000011111100000000000000
+    // 00000000000000000000000000000000
+    //
+    // Maybe it'd be smarter to be like
+    // drawRect(x1,y1,x2,y2);
+    // drawRectDotty(x1,y1,x2,y2);
+    //
+    /* prettier-ignore */
+    let run = [
+      0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,
+    ];
+    /* prettier-ignore */
+    let bmp = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0]
+    ]
+    //   bmp = [
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
+    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
+    // ];
+    // Gotta like, be a block of 8 high right? maybe not?
+    const width = bmp[0].length;
+    const height = bmp.length;
+    console.log({ width, height });
+    run = bmpToVerticalRun({ bmp, width, height });
+    // logVerticalRun(run, width, height);
+    console.log(run.join(""));
+
+    // run = verticalRunToVerticalRunBytes(run);
+    run = runToRunBytes(run);
+    console.log(run.join(" "));
+
+    let heightBits = Math.ceil(height / 8); // because.. bytes
+    const setup = [
+      0x1f,
+      0x28,
+      0x66,
+      0x11,
+      width % 256,
+      Math.floor(width / 256),
+      heightBits % 256,
+      Math.floor(heightBits / 256),
+      0x01
+    ];
+    const bytes = setup.concat(run);
+    // for (let i = 0; i < X * Y; i++) {
+    //   VFD.write(bmp[i]);
+    // }
+    // console.log(JSON.stringify(bytes));
+    return this.writeBytes(bytes);
+  }
   // x (pixels), y (row)
   drawBitmapProper = async ({ bmp, x, y, mode }) => {
     //
@@ -378,12 +434,12 @@ export default class Vdf {
     [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1],
     [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],]
-
     await this.setCursor(x, y);
     // Lump it up to vertical runs of 8
     // const width = bmp[0].length;
     const width = Math.ceil(bmp[0].length / 8) * 8; // round up to nearest multiple of 8
     const height = Math.ceil(bmp.length / 8) * 8; // round up to nearest multiple of 8
+
     const heightBits = Math.ceil(height / 8); // because a bytes is a column
     // Force fill 0 values for whatever extra y pixels we've added
     for (let y = 0; y < height; y++) {
@@ -408,7 +464,9 @@ export default class Vdf {
       }
     }
 
-    logBmp(bmp);
+    // ///////////////////////
+    // logBmp(bmp);
+    // ///////////////////////
 
     console.log({ x, y, width, height, heightBits });
 
@@ -425,13 +483,11 @@ export default class Vdf {
     //   }
     // }
     // Convert 2D array into a single run of bytes - each being the full vertical column
-    let verticalRun = [];
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        verticalRun.push(bmp[y][x]);
-      }
-    }
-    logVerticalRun(verticalRun, width, height);
+    let verticalRun = bmpToVerticalRun({ bmp, width, height });
+
+    // ///////////////////////
+    // logVerticalRun(verticalRun, width, height);
+    // ///////////////////////
 
     // for (let x = 0; x < width; x++) {
     //   for (let y = 0; y < height; y++) {
@@ -445,28 +501,36 @@ export default class Vdf {
     // console.log(JSON.stringify(verticalRun));
     // verticalRun[1] = 0;
     // Convert each 8 bits into a hex byte
-    let verticalRunBytes = [];
-    let byteString = "";
-    verticalRun.forEach((p, i) => {
-      // Create a string "01010110"
-      byteString += "" + p;
-      if (byteString.length === 8) {
-        // if 8 long, convert to integer and push to array
-        // console.log(parseInt(byteString, 2));
-        verticalRunBytes.push(parseInt(byteString, 2));
-        // process.stdout.write("\n" + byteString);
-        // process.stdout.write(" " + parseInt(byteString, 2));
-        // (I think integer is probably fine, like, 0x07 is the same as 7, right?
-        byteString = "";
-      }
-    });
+    let verticalRunBytes = verticalRunToVerticalRunBytes(verticalRun);
+
     // console.log(JSON.stringify(verticalRunBytes));
     console.log("that said, it all looks legit to me up to here");
+    // const setup = [
+    //   0x1f, // 31
+    //   0x28, // 40
+    //   0x66, // 102
+    //   0x11, // 17
+    //   // Pretty certain this is all correct, re apf200_r201et.pdf and http://tpcg.io/pGmbavGR
+    //   width % 256, // xL
+    //   Math.floor(width / 256), // xH      (added floor because.. it just must be)
+    //   heightBits % 256, // yL
+    //   Math.floor(heightBits / 256), // yH (added floor because.. it just must be)
+    //   //  xL: Bit image X size lower byte ( by 1dot)
+    //   //  xH: Bit image X size upper byte ( by 1dot)
+    //   //  yL: Bit image Y size lower byte ( by 8dots)
+    //   //  yH: Bit image Y size upper byte ( by 8dots)
+    //   0x01
+    // ];
+    // With X and Y !? https://github.com/entozoon/noritake-vfd/blob/master/docs/apf200_r201et.pdf page 31
     const setup = [
       0x1f,
       0x28,
-      0x66,
-      0x11,
+      0x64,
+      0x20,
+      0, // xPL
+      0, // xPH
+      0, // yPL
+      0, // yPH
       // Pretty certain this is all correct, re apf200_r201et.pdf and http://tpcg.io/pGmbavGR
       width % 256, // xL
       Math.floor(width / 256), // xH      (added floor because.. it just must be)
@@ -478,7 +542,6 @@ export default class Vdf {
       //  yH: Bit image Y size upper byte ( by 8dots)
       0x01
     ];
-    const bytes = setup.concat(verticalRunBytes);
     // console.log(JSON.stringify(bytes));
 
     console.log(
@@ -520,10 +583,14 @@ export default class Vdf {
     const whatTheFuckBytesAsVerticalRun = convertVerticalRunBytesToVerticalRun(
       whatTheFuckBytes
     );
-    // console.log(JSON.stringify(whatTheFuckBytes));
+    console.log(JSON.stringify(whatTheFuckBytes));
     // console.log(JSON.stringify(whatTheFuckBytesAsVerticalRun));
     logVerticalRun(whatTheFuckBytesAsVerticalRun, width, height);
     // logVerticalRunBytes(whatTheFuck, 8);
+
+    // const bytes = setup.concat(verticalRunBytes);
+    const bytes = setup.concat(whatTheFuckBytes);
+    console.log(JSON.stringify(bytes));
 
     return this.writeBytes(bytes);
   };

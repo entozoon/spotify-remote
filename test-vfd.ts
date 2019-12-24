@@ -19,11 +19,13 @@ const test = async () => {
   await vfd.resetFont();
   await vfd.setMixtureMode("normal");
   await vfd.setBrightness(5);
+  await vfd.clear();
   // await vfd.echo("Bam", 0, 0, 0.9);
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
-  await vfd.drawRect({ x: 0, y: 0, width: 9, height: 9, mode: "halftone" }); // *******
+  await vfd.drawTest();
+  // await vfd.drawRect({ x: 0, y: 0, width: 9, height: 9, mode: "normal" }); // *******
   // await vfd.setCursor(15, 1);
   // await vfd.drawLine(0, 16, 0, 0);
   // await vfd.drawRectDotty(50, 16, 80, 24);

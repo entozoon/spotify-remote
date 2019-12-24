@@ -1,3 +1,5 @@
+import chunk from "lodash/chunk";
+
 export const delay = t => new Promise(resolve => setTimeout(resolve, t));
 
 export const msToTime = ms => {
@@ -17,6 +19,15 @@ export const logBmp = bmp => {
   }
 };
 
+export const bmpToVerticalRun = ({ bmp, width, height }) => {
+  let verticalRun = [];
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      verticalRun.push(bmp[y][x]);
+    }
+  }
+  return verticalRun;
+};
 export const numberToBinary = (number, length = 0) =>
   number.toString(2).padStart(length, "0");
 
@@ -35,6 +46,29 @@ export const logVerticalRun = (run, width, height) => {
     }
     process.stdout.write(`${r ? "1" : "-"}`);
   });
+};
+
+export const verticalRunToVerticalRunBytes = verticalRun => {
+  let verticalRunBytes = [];
+  let byteString = "";
+  verticalRun.forEach((p, i) => {
+    // Create a string "01010110"
+    byteString += "" + p;
+    if (byteString.length === 8) {
+      // if 8 long, convert to integer and push to array
+      // console.log(parseInt(byteString, 2));
+      verticalRunBytes.push(parseInt(byteString, 2));
+      // process.stdout.write("\n" + byteString);
+      // process.stdout.write(" " + parseInt(byteString, 2));
+      // (I think integer is probably fine, like, 0x07 is the same as 7, right?
+      byteString = "";
+    }
+  });
+  return verticalRunBytes;
+};
+
+export const runToRunBytes = run => {
+  return chunk(run, 8);
 };
 
 export const logVerticalRunBytes = (runBytes, width) => {
