@@ -251,13 +251,12 @@ export default class Vdf {
     } else if (mode == "random") {
       var seedrandom = require("seedrandom");
       let seed = 0;
-
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           bmp[y][x] = bmp[y][x]
             ? // ? Math.sin(x * 99999 + y * 99999) > 0.1
               // Math.sin((seed += 1000)) * 10000 > 0.4
-              ++seed % 4 == 0
+              seedrandom(++seed)() > 0.7
               ? 1
               : 0
             : 0;
