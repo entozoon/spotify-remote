@@ -5,15 +5,10 @@
 const SerialPort = require("serialport");
 import {
   msToTime,
-  logBmp,
-  logVerticalRun,
-  numberToBinary,
-  whatTheFuckIsThis,
-  logVerticalRunBytes,
-  convertVerticalRunBytesToVerticalRun,
-  verticalRunToVerticalRunBytes,
+  bmpFillToGivenDimensions,
   runToRunBytes,
-  bmpToVerticalRun
+  bmpToVerticalRun,
+  logBmp
 } from "./utils";
 // import Readline from "@serialport/parser-readline";
 // const parser = new Readline();
@@ -179,163 +174,88 @@ export default class Vdf {
     await this.setKerning(2);
     return;
   }
-  drawBitmap(bmp, width, height) {
-    /* prettier-ignore */
-    bmp = [
-      // 11111000  00011111
-      //  = F8      = 1F
-      0xf8, 0x1f, // ^ a 16 pixels row
-      0xe7, 0xa7,
-      0xcb, 0xd3,
-      0x9d, 0xe9,
-      0xa0, 0x0d,
-      0x5d, 0xe2,
-      0x3d, 0xec,
-      0x3d, 0xec,
-      0x40, 0x00,
-      0x3d, 0xec,
-      0x5d, 0xea,
-      0xa5, 0xe5,
-      0x98, 0x09,
-      0xcb, 0xd3,
-      0xe7, 0xa7,
-      0xf8, 0x1f
-    ];
-    width = 16;
-    height = 16;
-    /* prettier-ignore */
-    // let bmpMyke = [
-    //   [0, 0, 0, 1, 0, 0, 0],
-    //   [0, 0, 1, 0, 1, 0, 0],
-    //   [0, 1, 0, 0, 0, 1, 0],
-    //   [0, 0, 1, 0, 1, 0, 0],
-    //   [0, 0, 0, 1, 0, 0, 0]
-    // ];
-    // OOF - now that's an algorithm to figure out. I mean, they _have_ to be in
-    // chunks of 8, even if the rows aren't long enough..
-    // But, hol' up for a minute because I might not even be bothering with graphics.
-    let heightBits = height / 8; // because.. bytes
-    const setup = [
-      0x1f,
-      0x28,
-      0x66,
-      0x11,
-      width % 256,
-      width / 256,
-      heightBits % 256,
-      heightBits / 256,
-      0x01
-    ];
-    const bytes = setup.concat(bmp);
-    // for (let i = 0; i < X * Y; i++) {
-    //   VFD.write(bmp[i]);
-    // }
-    console.log(bytes);
-    return this.writeBytes(bytes);
-  }
-  drawTest() {
-    //
-    // 11111111111111111010101010101010
-    // let bmp = [0xff, 0xff, 0x55, 0xaa];
-    // let blank = [0x00, 0x00, 0x00, 0x00];
-    // bmp = [
-    //   ...bmp,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank,
-    //   ...blank
-    // ];
-    //
-    // OH FUCK
-    // It draws them at 8 pixel vertical columns at a time
-    // deja frickin vous
-    //
-    // 1 1 1 1 111111111111 1010101010101010
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    // 0 0 0 0 000000000000 0000000000000000
-    //
-    // 00000000000011110000000000000000
-    // 00000000010000000010000000000000
-    // 00000001000110001100100000000000
-    // 00000010000000000000001000000000
-    // 00000000100001110001100000000000
-    // 00000000001100000010000000000000
-    // 00000000000011111100000000000000
-    // 00000000000000000000000000000000
-    //
-    // Maybe it'd be smarter to be like
-    // drawRect(x1,y1,x2,y2);
-    // drawRectDotty(x1,y1,x2,y2);
-    //
-    /* prettier-ignore */
-    let run = [
-      0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,
-    ];
+  drawBitmapTest = async () => {
+    // No explanations here, See drawBitmap
     /* prettier-ignore */
     let bmp = [
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-      [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0]
-    ]
-    //   bmp = [
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
-    // ];
-    // Gotta like, be a block of 8 high right? maybe not?
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+      [0,0,0,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],
+      [0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0],
+      [0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,1,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+    ];
+    this.drawBitmap({ bmp, x: 0, y: 0, mode: "halftone" });
+  };
+  // x (pixels), y (row)
+  drawBitmap = async ({ bmp, x, y, mode }) => {
+    //
+    // HOW IT WORKS
+    // It draws vertical columns top to bottom, using a big long run of bytes.
+    // You chunk these columns up into 8 pixels at a time (image must have a multiple of 8)
+    // Take the binary number it represents, convert that to a byte and queue it up.
+    //
+    // ASSUMPTIONS (empirically correct)
+    //  - Any width is okay
+    //  - It magically handles multiple columns of 8 pixels
+    //  - You can write integers to the VFD, not just hex values
+    //  - xH and yH need math.floor
+    //
+
+    // Force a height increase to multiple of 8, with empty pixels
     const width = bmp[0].length;
-    const height = bmp.length;
-    console.log({ width, height });
-    run = bmpToVerticalRun({ bmp, width, height });
-    // logVerticalRun(run, width, height);
-    console.log(run.join(""));
+    const height = Math.ceil(bmp.length / 8) * 8;
+    const heightBits = Math.ceil(height / 8);
+    bmp = bmpFillToGivenDimensions({ bmp, width, height });
+    // console.log({ x, y, width, height, heightBits });
 
-    // run = verticalRunToVerticalRunBytes(run);
-    run = runToRunBytes(run);
-    console.log(run.join(" "));
+    if (mode == "halftone") {
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          // Complete guess! Nailed it!
+          bmp[y][x] = bmp[y][x] ? ((x + y) % 2 == 0 ? 1 : 0) : 0;
+        }
+      }
+    } else if (mode == "gradient") {
+      // It probably has to be like, generate the same pattern every time so it doesn't randomise
+    }
 
-    let heightBits = Math.ceil(height / 8); // because.. bytes
+    ///////////////////////
+    logBmp(bmp);
+    ///////////////////////
+
+    // Create array of vertical columns of pixels
+    let run = bmpToVerticalRun({ bmp, width, height });
+
+    // Chunk columns into groups of 8 pixels and convert each to a byte value
+    let runBytes = runToRunBytes({ run, width, height });
+
     const setup = [
       0x1f,
       0x28,
@@ -347,253 +267,13 @@ export default class Vdf {
       Math.floor(heightBits / 256),
       0x01
     ];
-    const bytes = setup.concat(run);
-    // for (let i = 0; i < X * Y; i++) {
-    //   VFD.write(bmp[i]);
-    // }
+
+    const bytes = setup.concat(runBytes);
     // console.log(JSON.stringify(bytes));
-    return this.writeBytes(bytes);
-  }
-  // x (pixels), y (row)
-  drawBitmapProper = async ({ bmp, x, y, mode }) => {
-    //
-    // ASSUMPTIONS (that may not be correct!)
-    //
-    //  - Any width is okay
-    //  - It magically handles multiple rows of 8 pixels (I THINK THIS IS WRONG)
-    //    Starting to think it doesn't have to be 8 pixels at all
-    //   and maybe vertically it draws the full column?
-    //  - You can write integers to the VFD, not just hex values
-    //  - xH and yH need math.floor
-    //
-
-    /* prettier-ignore */
-    // bmp = [
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
-    //   [1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
-    // ];
-    bmp = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-    [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1],
-    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
-    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1],
-    [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
-    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
-    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
-    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1],
-    [1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1],
-    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
-    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
-    [1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
-    [1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1],
-    [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1],
-    [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],]
-    await this.setCursor(x, y);
-    // Lump it up to vertical runs of 8
-    // const width = bmp[0].length;
-    const width = Math.ceil(bmp[0].length / 8) * 8; // round up to nearest multiple of 8
-    const height = Math.ceil(bmp.length / 8) * 8; // round up to nearest multiple of 8
-
-    const heightBits = Math.ceil(height / 8); // because a bytes is a column
-    // Force fill 0 values for whatever extra y pixels we've added
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (!bmp[y]) {
-          bmp[y] = Array(width).fill(0);
-        }
-        if (!bmp[y][x]) {
-          bmp[y][x] = 0;
-        }
-      }
-    }
-    // console.log(bmp);
-
-    if (mode == "halftone") {
-      // It probably has to be like, generate the same pattern every time so it doesn't randomise
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          // Complete guess! Nailed it!
-          bmp[y][x] = bmp[y][x] ? ((x + y) % 2 == 0 ? 1 : 0) : 0;
-        }
-      }
-    }
-
-    // ///////////////////////
-    // logBmp(bmp);
-    // ///////////////////////
-
-    console.log({ x, y, width, height, heightBits });
-
-    // Convert 2D array into a single run of bytes - each being an 8 pixel column. Woooooosh!
-    // let verticalRun = [];
-    // for (let row = 0; row < height; row += 8) {
-    //   for (let x = 0; x < width; x++) {
-    //     for (let y = row; y < row + 8; y++) {
-    //       verticalRun.push(bmp[y][x]);
-    //       // process.stdout.write(bmp[row + y][x] ? "1" : "-");
-    //       // process.stdout.write(`${x},${row + y} `);
-    //     }
-    //     // process.stdout.write("\n");
-    //   }
-    // }
-    // Convert 2D array into a single run of bytes - each being the full vertical column
-    let verticalRun = bmpToVerticalRun({ bmp, width, height });
-
-    // ///////////////////////
-    // logVerticalRun(verticalRun, width, height);
-    // ///////////////////////
-
-    // for (let x = 0; x < width; x++) {
-    //   for (let y = 0; y < height; y++) {
-    //     verticalRun.push(bmp[y][x]);
-    //     process.stdout.write(bmp[y][x] ? "1" : "-");
-    //     // process.stdout.write(`${x},${row + y} `);
-    //   }
-    //   process.stdout.write("\n");
-    // }
-    // console.log("this is right but it goes along, drawing the vertical columns for too long horizontal when it should have popped to line below. perhaps width is being set wrong? or maybe not that at all. Like, it should indeed be going along for 16 columns.. but I mean, it must be the run right? like, it goes along okay but then the columns start beginning with the row below");
-    // console.log(JSON.stringify(verticalRun));
-    // verticalRun[1] = 0;
-    // Convert each 8 bits into a hex byte
-    let verticalRunBytes = verticalRunToVerticalRunBytes(verticalRun);
-
-    // console.log(JSON.stringify(verticalRunBytes));
-    console.log("that said, it all looks legit to me up to here");
-    // const setup = [
-    //   0x1f, // 31
-    //   0x28, // 40
-    //   0x66, // 102
-    //   0x11, // 17
-    //   // Pretty certain this is all correct, re apf200_r201et.pdf and http://tpcg.io/pGmbavGR
-    //   width % 256, // xL
-    //   Math.floor(width / 256), // xH      (added floor because.. it just must be)
-    //   heightBits % 256, // yL
-    //   Math.floor(heightBits / 256), // yH (added floor because.. it just must be)
-    //   //  xL: Bit image X size lower byte ( by 1dot)
-    //   //  xH: Bit image X size upper byte ( by 1dot)
-    //   //  yL: Bit image Y size lower byte ( by 8dots)
-    //   //  yH: Bit image Y size upper byte ( by 8dots)
-    //   0x01
-    // ];
-    // With X and Y !? https://github.com/entozoon/noritake-vfd/blob/master/docs/apf200_r201et.pdf page 31
-    const setup = [
-      0x1f,
-      0x28,
-      0x64,
-      0x20,
-      0, // xPL
-      0, // xPH
-      0, // yPL
-      0, // yPH
-      // Pretty certain this is all correct, re apf200_r201et.pdf and http://tpcg.io/pGmbavGR
-      width % 256, // xL
-      Math.floor(width / 256), // xH      (added floor because.. it just must be)
-      heightBits % 256, // yL
-      Math.floor(heightBits / 256), // yH (added floor because.. it just must be)
-      //  xL: Bit image X size lower byte ( by 1dot)
-      //  xH: Bit image X size upper byte ( by 1dot)
-      //  yL: Bit image Y size lower byte ( by 8dots)
-      //  yH: Bit image Y size upper byte ( by 8dots)
-      0x01
-    ];
-    // console.log(JSON.stringify(bytes));
-
-    console.log(
-      "This is an image a guy feeds in as an example. I don't think it's columns of 8 at all!"
-    );
-    /* prettier-ignore */
-    let logo = [ 0xff,0xf0,0x0f,0xff,0xff,0x80,0x01,0xff,0xfe,0x00,0x00,0x7f,0xfc,0x00,0x00,0x3f,
-      0xf8,0x00,0x00,0x1f,0xf0,0x00,0x00,0x0f,0xe0,0x0f,0xf0,0x07,0xc0,0x3f,0xfc,0x07,
-      0xc0,0x7f,0xfe,0x03,0x80,0xff,0xff,0x01,0x81,0xff,0xff,0x01,0x81,0xff,0xff,0x81,
-      0x01,0xfc,0x3f,0x81,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,
-      0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,
-      0x03,0xfc,0x3f,0x80,0x81,0xfc,0x3f,0x81,0x81,0xff,0xff,0x81,0x80,0xff,0xff,0x01,
-      0xc0,0x7f,0xfe,0x03,0xc0,0x7f,0xfe,0x03,0xe0,0x3f,0xf8,0x07,0xf0,0x0f,0xf0,0x0f,
-      0xf0,0x07,0xe0,0x1f,0xf8,0x03,0xc0,0x1f,0xfc,0x00,0x00,0x3f,0xfe,0x00,0x00,0x7f,
-      0xff,0x80,0x01,0xff,0xff,0xc0,0x03,0xff,0xff,0x80,0x01,0xff,0xfe,0x00,0x00,0x7f,
-      0xfe,0x00,0x00,0x7f,0xf8,0x03,0x80,0x1f,0xf0,0x07,0xe0,0x1f,0xf0,0x0f,0xf0,0x0f,
-      0xe0,0x3f,0xf8,0x07,0xc0,0x7f,0xfc,0x03,0xc0,0x7f,0xfe,0x03,0x80,0xff,0xff,0x01,
-      0x81,0xff,0xff,0x81,0x81,0xfc,0x3f,0x81,0x03,0xfc,0x3f,0x80,0x03,0xfc,0x3f,0xc0,
-      0x03,0xe0,0x07,0xc0,0x03,0xe0,0x07,0xc0,0x03,0xe0,0x07,0xc0,0x03,0xe0,0x07,0xc0,
-      0x03,0xfc,0x3f,0xc0,0x03,0xfc,0x3f,0xc0,0x01,0xfc,0x3f,0x81,0x81,0xff,0xff,0x81,
-      0x81,0xff,0xff,0x81,0x80,0xff,0xff,0x01,0xc0,0x7f,0xfe,0x03,0xc0,0x1f,0xf8,0x07,
-      0xe0,0x0f,0xf0,0x07,0xf0,0x00,0x00,0x0f,0xf8,0x00,0x00,0x1f,0xfc,0x00,0x00,0x3f,
-      0xfe, 0x00, 0x00, 0x7f, 0xff, 0x80, 0x01, 0xff, 0xff, 0xf8, 0x1f, 0xff]
-    let logoBinary = [];
-    logo.forEach((byte, i) => {
-      let binString = `${numberToBinary(byte, 8)}`;
-      binString.split("").forEach((c, ci) => {
-        logoBinary.push(parseInt(c));
-      });
-    });
-    // console.log(logoBinary);
-    // logVerticalRun(logoBinary, 64, 32);
-
-    console.log(
-      "Okay, so we've also got this whatTheFuck function.. lifted from Java docs. It looks to me to output the same as my functions (but just in an absolutely batty coding style)"
-    );
-
-    const whatTheFuckBytes = whatTheFuckIsThis(bmp, width, height);
-    const whatTheFuckBytesAsVerticalRun = convertVerticalRunBytesToVerticalRun(
-      whatTheFuckBytes
-    );
-    console.log(JSON.stringify(whatTheFuckBytes));
-    // console.log(JSON.stringify(whatTheFuckBytesAsVerticalRun));
-    logVerticalRun(whatTheFuckBytesAsVerticalRun, width, height);
-    // logVerticalRunBytes(whatTheFuck, 8);
-
-    // const bytes = setup.concat(verticalRunBytes);
-    const bytes = setup.concat(whatTheFuckBytes);
-    console.log(JSON.stringify(bytes));
-
+    await this.setCursor(0, 0);
     return this.writeBytes(bytes);
   };
+
   drawRect = async ({ x, y, width, height, mode }) => {
     console.log(":: drawRect");
     // const width = x2 - x1,
@@ -608,7 +288,7 @@ export default class Vdf {
         bmp[y][x] = 1;
       }
     }
-    return this.drawBitmapProper({ bmp, x, y, mode });
+    return this.drawBitmap({ bmp, x, y, mode });
   };
   drawRectDotty = async (x1, y1, x2, y2) => {
     // You know what'd be sick
