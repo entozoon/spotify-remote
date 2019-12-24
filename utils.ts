@@ -1,4 +1,4 @@
-import chunk from "lodash/chunk";
+import chunk from "lodash.chunk";
 
 export const delay = t => new Promise(resolve => setTimeout(resolve, t));
 
@@ -68,6 +68,10 @@ export const verticalRunToVerticalRunBytes = verticalRun => {
 };
 
 export const runToRunBytes = run => {
+  console.log(chunk);
+
+  console.log(chunk(run, 8));
+
   return chunk(run, 8);
 };
 
