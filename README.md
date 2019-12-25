@@ -33,10 +33,17 @@ Also open up /boot/config.txt and add:
 
 sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 OR might be able to just save this as wpa_supplicant.conf in the boot dir too!
+Hotspot, Home, Work
 
     country=US
     ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
     update_config=1
+    network={
+     ssid="Zyke"
+     scan_ssid=1
+     psk="bigboobs"
+     key_mgmt=WPA-PSK
+    }
     network={
      ssid="2Moe2Mansion"
      scan_ssid=1
@@ -49,6 +56,15 @@ OR might be able to just save this as wpa_supplicant.conf in the boot dir too!
      psk="techdept13ew"
      key_mgmt=WPA-PSK
     }
+
+Disable WIFI power management from disabling it randomly
+
+    sudo nano /etc/rc.local
+
+Add
+
+    sleep 10
+    sudo iwconfig wlan0 power off
 
 ### Ideas
 
