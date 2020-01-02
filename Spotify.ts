@@ -2,7 +2,8 @@ const fs = require("fs");
 const SpotifyWebApi = require("spotify-web-api-node");
 const EventEmitter = require("events");
 const tokensFilename = "./spotify-tokens.saved.json";
-
+import { humanKey } from "./utils";
+//
 export default class extends EventEmitter {
   constructor({ spotifyCredentials }) {
     super();
@@ -34,14 +35,12 @@ export default class extends EventEmitter {
   setTokensOntoApiNonsense = () =>
     new Promise((resolve, reject) => {
       // console.log(":: setTokensOntoApiNonsense", this.tokens);
-
       this.tokens.access_token &&
         this.spotifyApi.setAccessToken(this.tokens.access_token);
       this.tokens.refresh_token &&
         this.spotifyApi.setRefreshToken(this.tokens.refresh_token);
       resolve();
     });
-
   get authoriseURL() {
     return this.spotifyApi.createAuthorizeURL([
       "user-read-playback-state",
@@ -81,7 +80,7 @@ export default class extends EventEmitter {
         data => {
           if (!data.body.is_playing) return resolve(null);
           const { progress_ms } = data.body,
-            { name, album, duration_ms } = data.body.item,
+            { id, name, album, duration_ms } = data.body.item,
             { volume_percent } = data.body.device,
             volumeFraction = volume_percent / 100,
             // artistName = artists ? artists[0].name : null,
@@ -89,6 +88,7 @@ export default class extends EventEmitter {
             albumName = album.name,
             progressFraction = progress_ms / duration_ms,
             state = {
+              id,
               name,
               artist,
               albumName,
@@ -105,9 +105,57 @@ export default class extends EventEmitter {
         }
       );
     });
-
-  getCurrentSong = () =>
-    new Promise(resolve => {
-      resolve(`song name or whatevs`);
+  audioFeatures = async id =>
+    new Promise((resolve, reject) => {
+      // console.log("dry run problems", this.spotifyApi);
+      this.spotifyApi.getAudioFeaturesForTrack(id).then(
+        data => {
+          let { key, mode } = data.body;
+          resolve({
+            key: humanKey({ key, mode })
+          });
+        },
+        err => {
+          return reject(err);
+        }
+      );
     });
+  audioAnalysis = async id =>
+    new Promise((resolve, reject) => {
+      // console.log("dry run problems", this.spotifyApi);
+      this.spotifyApi.getAudioAnalysisForTrack(id).then(
+        data => {
+          let { segments } = data.body;
+          let volumeArray = segments ? this.createVolumeArray(segments) : [];
+          resolve({
+            volumeArray
+          });
+        },
+        err => {
+          return reject(err);
+        }
+      );
+    });
+  createVolumeArray = segments => {
+    const width = 140,
+      height = 8,
+      minVolume = -30;
+    let volumeArray: number[] = Array(width).fill(0);
+    console.log(
+      "!! These little half second segments do have a pitches array, so I could totally do an equalizer. Itd have to be draw the current frame with clever timing though, and creating the graphic might be tricky.."
+    );
+    volumeArray = volumeArray.map((v, i) => {
+      let percentThrough = i / width;
+      let volume =
+        segments[Math.floor(segments.length * percentThrough)].loudness_start;
+      volume = volume < minVolume ? minVolume : volume;
+      return volume;
+    });
+    // Normalize everything from like -60db -> -2db, to 0 -> 8
+    const maxVolume = Math.max(...volumeArray);
+    volumeArray = volumeArray.map((v, i) => {
+      return Math.round(((v - minVolume) / (maxVolume - minVolume)) * height);
+    });
+    return volumeArray;
+  };
 }

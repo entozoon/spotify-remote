@@ -4,9 +4,8 @@
 // https://github.com/entozoon/noritake-vfd/
 //
 import Vfd from "./Vfd";
-
+import { delay } from "./utils";
 const isDesktop = process.argv[2] && process.argv[2] === "desktop";
-
 const test = async () => {
   const vfd = new Vfd();
   await vfd.init().catch(e => {
@@ -20,32 +19,51 @@ const test = async () => {
   await vfd.setMixtureMode("normal");
   await vfd.setBrightness(5);
   await vfd.clear();
-  await vfd.echo("Bam.", 0, 0, 0.9);
+  await vfd.echo("Bam..", 0, 0, 0.9);
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
   // await vfd.drawBitmapTest();
-  await vfd.drawRect({ x: 0, y: 3, width: 30, height: 8, mode: "normal" });
   await vfd.drawRect({
-    x: 30,
+    x: 0,
     y: 3,
-    width: 30,
+    width: 35,
+    height: 8
+  });
+  await vfd.drawRect({
+    x: 35,
+    y: 3,
+    width: 35,
     height: 8,
     mode: "halftone"
   });
   await vfd.drawRect({
-    x: 60,
+    x: 70,
     y: 3,
-    width: 30,
+    width: 35,
     height: 8,
     mode: "quartertone"
   });
   await vfd.drawRect({
-    x: 90,
+    x: 105,
     y: 3,
-    width: 30,
+    width: 35,
     height: 8,
     mode: "random"
+  });
+  await vfd.drawRect({
+    x: 1,
+    y: 3,
+    width: 1,
+    height: 8,
+    mode: "invert"
+  });
+  await vfd.drawRect({
+    x: 3,
+    y: 3,
+    width: 1,
+    height: 8,
+    mode: "invert"
   });
   // await vfd.setCursor(15, 1);
   // await vfd.drawLine(0, 16, 0, 0);

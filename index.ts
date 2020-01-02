@@ -30,7 +30,7 @@ let playingNicely = false;
     .then(async () => {
       await vfd.resetVFD();
       await vfd.resetFont();
-      await vfd.setBrightness(5);
+      await vfd.setBrightness(8);
       // await vfd.drawLine();
     });
 
@@ -41,13 +41,24 @@ let playingNicely = false;
     // .catch(e => {
     //   return console.error("Error::dry run", e);
     // })
-    .then(state => {
+    .then(async (state: any) => {
       playingNicely = true;
-      vfd.displaySongState(state);
+      await vfd.displaySongState(state);
+      const { id } = state;
+      spotify.audioFeatures(id).then(info => {
+        console.log(info);
+      });
+      spotify.audioAnalysis(id).then((analysis: any) => {
+        // console.log(analysis);
+        const { volumeArray } = analysis;
+        if (volumeArray) {
+          vfd.displayVolumeArray(analysis.volumeArray);
+        }
+      });
     })
     .catch(e => {
       console.log(
-        "No joy with saved tokens. Creating a web server for user input"
+        "No joy with saved tokens. Creating a web server for user input."
       );
     });
 })();
@@ -82,7 +93,8 @@ server.on("init", async ({ url, urlNgrok }) => {
 
   if (!playingNicely) {
     await vfd.echo(`Go to ${url.replace(":80", "")}`, 0, 0, 0.95);
-    await vfd.echo(`or ${urlNgrok.replace("https://", "")}`, 0, 1, 0.95);
+    urlNgrok &&
+      (await vfd.echo(`or ${urlNgrok.replace("https://", "")}`, 0, 1, 0.95));
   }
 });
 
@@ -97,10 +109,3 @@ let authRefreshInterval = setInterval(() => {
     );
   });
 }, 600000); // 10m
-
-// const updateCurrentSongOrWhatever = async () => {
-//   // console.log(authToken.code);
-//   const currentSong = await spotify.getCurrentSong();
-//   console.log("Current song:", currentSong);
-// };
-// setInterval(updateCurrentSongOrWhatever, 30000);

@@ -214,7 +214,7 @@ export default class Vdf {
     return this.drawBitmap({ bmp, x: 20, y: 0, mode: "halftone" });
   };
   // x (pixels), y (row)
-  drawBitmap = async ({ bmp, x, y, mode }) => {
+  drawBitmap = async ({ bmp, x, y, mode = "normal" }) => {
     console.log(":: drawBitmap");
     //
     // HOW IT WORKS
@@ -288,16 +288,23 @@ export default class Vdf {
     await this.setCursor(x, y);
     return this.writeBytes(bytes);
   };
-  drawRect = async ({ x, y, width, height, mode }) => {
+  drawRect = async ({
+    x,
+    y, // row
+    width,
+    height,
+    mode = "normal"
+  }) => {
+    // Any x and width are fine, but y is an 8px row and height is rounded up to 8 pixels and blank the rest
     console.log(":: drawRect");
     let bmp = [];
     //[[0, 1, 0],
     // [1, 0, 1],
     // [0, 1, 0]]
     for (let y = 0; y < height; y++) {
-      bmp[y] = Array(width).fill(0);
+      bmp[y] = Array(width).fill(mode === "invert" ? 1 : 0);
       for (let x = 0; x < width; x++) {
-        bmp[y][x] = 1;
+        bmp[y][x] = mode === "invert" ? 0 : 1;
       }
     }
     return this.drawBitmap({ bmp, x, y, mode });
@@ -337,17 +344,37 @@ export default class Vdf {
         2,
         0.9
       );
-      await this.drawProgressBar(progressFraction);
+      // await this.drawProgressBar(progressFraction);
       // await this.echo(`Volume: ${volume_percent}`, 0, 3, 0.9);
-      await this.drawVolumeBar(
-        msToTime(progress_ms),
-        volumeFraction,
-        msToTime(duration_ms)
-      );
+      // await this.drawVolumeBar(
+      //   msToTime(progress_ms),
+      //   volumeFraction,
+      //   msToTime(duration_ms)
+      // );
     } else {
       console.log("No song playing");
       // Myke: there's a write mixture display mode. insert style and shit
       await this.echo(`No song playing`, 0, 0, 0.9);
     }
+  };
+  displayVolumeArray = async volumeArray => {
+    let width = 140,
+      height = 8;
+    let bmp = []; //Array(height).fill([]);
+    let volumeChunks = volumeArray.map((v, x) => {
+      let chunk = [];
+      for (let y = height - 1; y >= 0; y--) {
+        chunk.push(y < v ? 1 : 0);
+      }
+      return chunk;
+    });
+    // console.log("volumeChunks", JSON.stringify(volumeChunks));
+    for (let y = 0; y < height; y++) {
+      if (!bmp[y]) bmp[y] = [];
+      for (let x = 0; x < width; x++) {
+        bmp[y][x] = volumeChunks[x][y] ? 1 : 0;
+      }
+    }
+    return this.drawBitmap({ bmp, x: 0, y: 3 });
   };
 }

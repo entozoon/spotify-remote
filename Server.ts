@@ -27,16 +27,17 @@ export default class extends EventEmitter {
       });
       server.listen(port, e => {
         if (e) {
-          console.log(e);
+          return console.log("Server listen error", e);
         }
       });
       // Start ngrok service for our http server
+      const url = `${ip.address()}:${port}`;
       (async () => {
-        const url = `${ip.address()}:${port}`;
         const urlNgrok = await ngrok.connect({ port });
         this.emit("init", { url, urlNgrok });
       })().catch(e => {
-        console.error("Error", e);
+        this.emit("init", { url });
+        return console.error("Ngrok Error", e);
       });
     }, serverTimeout);
   }
