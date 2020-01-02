@@ -20,7 +20,7 @@ const test = async () => {
   await vfd.setMixtureMode("normal");
   await vfd.setBrightness(5);
   await vfd.clear();
-  // await vfd.echo("Bam", 0, 0, 0.9);
+  await vfd.echo("Bam.", 0, 0, 0.9);
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
