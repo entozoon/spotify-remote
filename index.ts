@@ -6,6 +6,7 @@
 import Server from "./Server";
 import Spotify from "./Spotify";
 import Vfd from "./Vfd";
+import { delay, msToTime } from "./utils";
 
 // var uid = parseInt(process.env.SUDO_UID);
 // console.log(uid);
@@ -19,6 +20,9 @@ const spotify = new Spotify({ spotifyCredentials });
 const server = new Server({ spotifyCredentials, spotify });
 const vfd = new Vfd();
 let playingNicely = false;
+let loopTimeout;
+let progressUpdateInterval;
+let state;
 
 (async () => {
   await vfd
@@ -31,36 +35,16 @@ let playingNicely = false;
       await vfd.resetVFD();
       await vfd.resetFont();
       await vfd.setBrightness(8);
+      await vfd.echo(`--== Spotify Display ==--`, 0, 0, 0.85);
       // await vfd.drawLine();
     });
 
   // Dry run
   await spotify.setTokensOntoApiNonsense();
-  await spotify
-    .currentPlaybackState()
-    // .catch(e => {
-    //   return console.error("Error::dry run", e);
-    // })
-    .then(async (state: any) => {
-      playingNicely = true;
-      await vfd.displaySongState(state);
-      const { id } = state;
-      spotify.audioFeatures(id).then(info => {
-        console.log(info);
-      });
-      spotify.audioAnalysis(id).then((analysis: any) => {
-        // console.log(analysis);
-        const { volumeArray } = analysis;
-        if (volumeArray) {
-          vfd.displayVolumeArray(analysis.volumeArray);
-        }
-      });
-    })
-    .catch(e => {
-      console.log(
-        "No joy with saved tokens. Creating a web server for user input."
-      );
-    });
+  // Leave some time to like, see the current IP
+  setTimeout(() => {
+    loop();
+  }, 10000);
 })();
 
 // Web server user input received
@@ -75,16 +59,7 @@ server.on("authToken", async code => {
       console.error("Error::authorise", e);
     })
     .then(() => {
-      setTimeout(() => {
-        spotify
-          .currentPlaybackState()
-          .then(state => {
-            vfd.displaySongState(state);
-          })
-          .catch(e => {
-            console.error("Error::currentPlaybackState", e);
-          });
-      }, 2000);
+      loop();
     });
 });
 
@@ -92,9 +67,9 @@ server.on("init", async ({ url, urlNgrok }) => {
   console.log(":: Index: server init");
 
   if (!playingNicely) {
-    await vfd.echo(`Go to ${url.replace(":80", "")}`, 0, 0, 0.95);
+    await vfd.echo(`Go to ${url.replace(":80", "")}`, 0, 2, 0.95);
     urlNgrok &&
-      (await vfd.echo(`or ${urlNgrok.replace("https://", "")}`, 0, 1, 0.95));
+      (await vfd.echo(`or ${urlNgrok.replace("https://", "")}`, 0, 3, 0.95));
   }
 });
 
@@ -109,3 +84,91 @@ let authRefreshInterval = setInterval(() => {
     );
   });
 }, 600000); // 10m
+
+const loop = async () => {
+  await spotify
+    .currentPlaybackState()
+    // .catch(e => {
+    //   return console.error("Error::dry run", e);
+    // })
+    .then(async (_state: any) => {
+      state = _state; // global
+
+      playingNicely = true;
+      clearInterval(progressUpdateInterval);
+      const { id } = state;
+      spotify.audioFeatures(id).then(info => {
+        console.log(info);
+        state.key = info.key;
+        vfd.displaySongState(state);
+        // This probably isn't all resolving and chaining in order tbh
+      });
+      return state;
+    })
+    .catch(e => {
+      console.log(
+        "No joy with saved tokens. Await response from web server for user input.",
+        e
+      );
+      return;
+    })
+    .then(state => {
+      const { id } = state;
+      spotify
+        .audioAnalysis(id)
+        .then(async (analysis: any) => {
+          // console.log(analysis);
+          const { volumeArray } = analysis;
+          if (volumeArray) {
+            await vfd.displayVolumeArray(analysis.volumeArray);
+          }
+        })
+        .then(() => {
+          let timeout = state.duration_ms - state.progress_ms;
+          clearInterval(loopTimeout);
+          loopTimeout = setTimeout(() => {
+            loop();
+          }, timeout || 10000);
+
+          // 3:12 progress updater
+          // Have a breather before firing up the loop,
+          // so it can finish up drawing the volume array
+          progressUpdateInterval = setInterval(() => {
+            progressUpdate();
+          }, 100);
+        });
+    })
+    .catch(e => {
+      console.log("Error::", e);
+    });
+};
+
+// This is getting a little filthy
+let progressTicker = 0;
+const progressUpdate = () => {
+  // End of song
+  if (state.progress_ms > state.duration_ms) {
+    progressTicker = 0;
+    return;
+  }
+  // New song
+  if (progressTicker === 0) {
+    // Abritrary jump at the start, allowing for displayVolumeArray
+    // because I don't have the energy to write the timing script
+    state.progress_ms += 1000;
+  }
+  // Manually update progress, rather than polling API
+  state.progress_ms += 100;
+  state.progressFraction = state.progress_ms / state.duration_ms;
+  // console.log(state);
+  // Draw to screen
+  vfd.displayProgress(state);
+  progressTicker++;
+};
+
+// setTimeout(async () => {
+//   await vfd.clear();
+//   await vfd.echo("I'm out", 0, 0, 1);
+//   console.log("Exiting");
+//   process.exit();
+// }, 60000);

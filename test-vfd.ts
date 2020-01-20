@@ -19,11 +19,22 @@ const test = async () => {
   await vfd.setMixtureMode("normal");
   await vfd.setBrightness(5);
   await vfd.clear();
-  await vfd.echo("Bam..", 0, 0, 0.9);
+  await vfd.echo("Bam!", 0, 0, 0.9);
+  await vfd.echo("!£$ %^&* (){}:@~;'#", 0, 1, 0.9);
   // await vfd.setCursor(15, 1);
   // await vfd.echo("Bam...", 20, 1, 0.9);
   // await vfd.setCursor(10, 10);
   // await vfd.drawBitmapTest();
+
+  // Progress bar starting point?
+  await vfd.drawRect({
+    x: 0,
+    y: 2,
+    width: 70,
+    height: 2,
+    mode: "halftone"
+  });
+
   await vfd.drawRect({
     x: 0,
     y: 3,
@@ -65,6 +76,7 @@ const test = async () => {
     height: 8,
     mode: "invert"
   });
+
   // await vfd.setCursor(15, 1);
   // await vfd.drawLine(0, 16, 0, 0);
   // await vfd.drawRectDotty(50, 16, 80, 24);

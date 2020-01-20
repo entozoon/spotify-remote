@@ -18,6 +18,7 @@ export default class Vdf {
   serial = null;
   initialised = false;
   disabled = false;
+  progressStore;
   constructor() {}
   init() {
     console.log(":: init");
@@ -134,7 +135,7 @@ export default class Vdf {
   echo = async (verse, x, y, speed) => {
     if (this.disabled) return console.log(verse);
     if (!this.initialised) return;
-    console.log(":: echo");
+    // console.log(":: echo");
     await this.setCursor(x, y);
     speed = typeof speed == "undefined" ? 1 : speed;
     return new Promise(resolve => {
@@ -153,7 +154,9 @@ export default class Vdf {
     });
   };
   setCode(set, code) {
-    console.log(":: setKerning", set, code);
+    console.log(":: setCode", set, code);
+    // Set: 0 America, 1 France, 2 Germany, 3 England, 4 Denmark 1, 5 Sweden, 6 Italy, 7 Spain1, 8 Japan, 9 Norway, 10 Denmark2, 11 Spain2, 12 Latin America, 13 Korea
+    // Code: 0 PC437(USA – Euro std), 1 Katakana – Japanese, 2 PC850 (Multilingual), 3 PC860 (Portuguese), 4 PC863 (Canadian-French), 5 PC865 (Nordic), 16 WPC1252, 17 PC866 (Cyrillic #2), 18 PC852 (Latin 2), 19 PC858 ,
     return this.writeBytes([0x1b, 0x52, set, 0x1b, 0x74, code]);
   }
   // this.setKerning = size0to3 =>
@@ -169,8 +172,8 @@ export default class Vdf {
   // this.resetFont = () => {
   async resetFont() {
     console.log(":: resetFont ");
-    // England
-    await this.setCode(3, 0);
+    await this.setCode(0, 0); // US (no £, but you get #)
+    // await this.setCode(3, 0); // England
     await this.setKerning(2);
     return;
   }
@@ -215,7 +218,7 @@ export default class Vdf {
   };
   // x (pixels), y (row)
   drawBitmap = async ({ bmp, x, y, mode = "normal" }) => {
-    console.log(":: drawBitmap");
+    // console.log(":: drawBitmap");
     //
     // HOW IT WORKS
     // It draws vertical columns top to bottom, using a big long run of bytes.
@@ -266,7 +269,9 @@ export default class Vdf {
       // It probably has to be like, generate the same pattern every time so it doesn't randomise
     }
     ///////////////////////
-    logBmp(bmp);
+    ///////////////////////
+    // logBmp(bmp);
+    ///////////////////////
     ///////////////////////
     // Create array of vertical columns of pixels
     let run = bmpToVerticalRun({ bmp, width, height });
@@ -284,7 +289,11 @@ export default class Vdf {
       0x01
     ];
     const bytes = setup.concat(runBytes);
-    console.log(JSON.stringify(bytes));
+    ///////////////////////
+    ///////////////////////
+    // console.log(JSON.stringify(bytes));
+    ///////////////////////
+    ///////////////////////
     await this.setCursor(x, y);
     return this.writeBytes(bytes);
   };
@@ -296,7 +305,6 @@ export default class Vdf {
     mode = "normal"
   }) => {
     // Any x and width are fine, but y is an 8px row and height is rounded up to 8 pixels and blank the rest
-    console.log(":: drawRect");
     let bmp = [];
     //[[0, 1, 0],
     // [1, 0, 1],
@@ -317,8 +325,8 @@ export default class Vdf {
     //
   };
   drawVolumeBar = async (progress, fraction, duration) => {
-    await this.echo(`${progress}`, 0, 3, 0.9);
-    await this.echo(`${duration}`, 100, 3, 0.9);
+    // await this.echo(`${progress}`, 0, 3, 0.9);
+    // await this.echo(`${duration}`, 100, 3, 0.9);
     // this.drawLine(30, 3, fraction * 70);
     // this.drawRect(30, 3, 30 + fraction * 70, 3); //hmmm arrrghhh
     // this.drawRectDotty(30 + fraction * 70, 3, 70 - fraction * 70);
@@ -334,18 +342,17 @@ export default class Vdf {
         duration_ms,
         progressFraction,
         volume_percent,
-        volumeFraction
+        volumeFraction,
+        key
       } = state;
-      await this.echo(`${name}`, 0, 0, 0.9);
-      await this.echo(`${artist}`, 0, 1, 0.9);
-      await this.echo(
-        `${msToTime(progress_ms)} / ${msToTime(duration_ms)}`,
-        0,
-        2,
-        0.9
-      );
+      if (name) await this.echo(`${name}`, 0, 0, 1);
+      if (artist) await this.echo(`${artist}`, 0, 1, 1);
+      if (key) await this.echo(`Key ${key}`, 140 - 25 - key.length * 7, 2, 1);
+      // Stop initial render, having issuess with progressFraction..
+      // await this.displayProgress(state);
+
       // await this.drawProgressBar(progressFraction);
-      // await this.echo(`Volume: ${volume_percent}`, 0, 3, 0.9);
+      // await this.echo(`Volume: ${volume_percent}`, 0, 3, 1);
       // await this.drawVolumeBar(
       //   msToTime(progress_ms),
       //   volumeFraction,
@@ -354,7 +361,7 @@ export default class Vdf {
     } else {
       console.log("No song playing");
       // Myke: there's a write mixture display mode. insert style and shit
-      await this.echo(`No song playing`, 0, 0, 0.9);
+      await this.echo(`No song playing`, 0, 0, 1);
     }
   };
   displayVolumeArray = async volumeArray => {
@@ -376,5 +383,24 @@ export default class Vdf {
       }
     }
     return this.drawBitmap({ bmp, x: 0, y: 3 });
+  };
+  displayProgress = async ({ progress_ms, duration_ms, progressFraction }) => {
+    const progressStore = `${msToTime(progress_ms)} / ${msToTime(
+      duration_ms
+    )}      `;
+    if (this.progressStore != progressStore) {
+      this.progressStore = progressStore;
+      await this.echo(progressStore, 0, 2, 1);
+      await this.drawProgressLine({ progressFraction });
+    }
+  };
+  drawProgressLine = async ({ progressFraction }) => {
+    await this.drawRect({
+      x: 0,
+      y: 3,
+      width: Math.floor(progressFraction * 140) || 0,
+      height: 7,
+      mode: "quartertone"
+    });
   };
 }

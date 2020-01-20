@@ -1,8 +1,9 @@
 const chunk = require("lodash.chunk");
 
-export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms: Number) =>
+  new Promise(resolve => setTimeout(resolve, ms));
 
-export const msToTime = ms => {
+export const msToTime = (ms: Number) => {
   // https://stackoverflow.com/a/37770048
   let s = ~~(ms / 1000);
   return (s - (s %= 60)) / 60 + (9 < s ? ":" : ":0") + s;
@@ -57,6 +58,7 @@ export const logBmp = bmp => {
   }
 };
 
+// A -> G#m
 export const humanKey = ({ key, mode }) => {
   if (key == -1) return "";
   let a = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][
