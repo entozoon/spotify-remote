@@ -53,7 +53,7 @@ export default class extends EventEmitter {
         data => {
           console.log("Authorised!");
           this.saveTokens(data.body);
-          return resolve();
+          return resolve(data.body.expires_in); /// 3600 seconds (60m)
         },
         err => {
           // Probably the saved tokens are out of date

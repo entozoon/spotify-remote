@@ -59,31 +59,32 @@ server.on("authToken", async code => {
       console.error("Error::authorise", e);
     })
     .then(() => {
+      // Needs to refresh token, they last an hour but, yeah turning on and off..
+      setInterval(() => {
+        spotify.refreshTokens().catch(async e => {
+          await vfd.echo(
+            `Could not refresh access tokens, probably the saved tokens are out of date.`,
+            0,
+            0,
+            0.9
+          );
+        });
+      }, 600000); // 10m
+      // ^In theory, you could start it running a few mins before the saved token is expiring and it'll jank but.. I just don't have the energy anymore
+
+      // Main loop
       loop();
     });
 });
 
 server.on("init", async ({ url, urlNgrok }) => {
   console.log(":: Index: server init");
-
   if (!playingNicely) {
     await vfd.echo(`Go to ${url.replace(":80", "")}`, 0, 2, 0.95);
     urlNgrok &&
       (await vfd.echo(`or ${urlNgrok.replace("https://", "")}`, 0, 3, 0.95));
   }
 });
-
-// Needs to refresh token, they last an hour but, yeah turning on and off..
-let authRefreshInterval = setInterval(() => {
-  spotify.refreshTokens().catch(async e => {
-    await vfd.echo(
-      `Could not refresh access tokens, probably the saved tokens are out of date.`,
-      0,
-      0,
-      0.9
-    );
-  });
-}, 600000); // 10m
 
 const loop = async () => {
   await spotify
@@ -125,7 +126,7 @@ const loop = async () => {
       return {};
     })
     .then(state => {
-      if (!state || !state.id) {
+      if (!state || !state.id || !playingNicely) {
         return {};
       }
       const { id } = state;
@@ -138,6 +139,9 @@ const loop = async () => {
       });
     })
     .then(() => {
+      if (!state || !state.id || !playingNicely) {
+        return {};
+      }
       // Have a timeout fallback if no song playing
       let timeout = state ? state.duration_ms - state.progress_ms : 10000;
       // Retry every min of every ten seconds regardless.
