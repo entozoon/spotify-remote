@@ -22,7 +22,7 @@ const vfd = new Vfd();
 let playingNicely = false;
 let loopTimeout;
 let progressUpdateInterval;
-let state;
+let state: any = {};
 
 (async () => {
   await vfd
@@ -35,7 +35,7 @@ let state;
       await vfd.resetVFD();
       await vfd.resetFont();
       await vfd.setBrightness(8);
-      await vfd.echo(`--== Spotify Display ==--`, 0, 0, 0.85);
+      await vfd.echo(`--== Spotify Display ==--`, 5, 0, 0.85);
       // await vfd.drawLine();
     });
 
@@ -92,13 +92,18 @@ const loop = async () => {
     //   return console.error("Error::dry run", e);
     // })
     .then(async (_state: any) => {
-      let isNewSong = !state || !state.name || state.name != _state.name;
+      // This is an absolute ballachington
+      let isNewSong =
+        state != _state ||
+        // typeof state != typeof _state ||
+        JSON.stringify(state) != JSON.stringify(state) ||
+        (state && state.name && state.name != _state.name);
       state = _state; // global
       // Only bother our arse with a full render if song has changed
       if (!isNewSong) return state;
       playingNicely = true;
-      clearInterval(progressUpdateInterval);
-      if (!state || !state.id) {
+      // Try to only render once
+      if ((!state || !state.id) && isNewSong) {
         await vfd.clear();
         await vfd.echo(`No song playing`, 30, 3, 1);
         return state;
@@ -146,6 +151,7 @@ const loop = async () => {
       // 3:12 progress updater
       // Have a breather before firing up the loop,
       // so it can finish up drawing the volume array
+      clearInterval(progressUpdateInterval);
       progressUpdateInterval = setInterval(() => {
         if (state) progressUpdate();
       }, 100);
