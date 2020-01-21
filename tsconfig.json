@@ -5,7 +5,8 @@
     "module": "commonjs",
     "target": "es5",
     "allowJs": true,
-    "removeComments": true
+    "removeComments": true,
+    "resolveJsonModule": true
   },
   "exclude": ["./node_modules/*", "./dist"]
 }

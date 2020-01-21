@@ -7,6 +7,7 @@ import Server from "./Server";
 import Spotify from "./Spotify";
 import Vfd from "./Vfd";
 import { delay, msToTime } from "./utils";
+import * as spotifyCredentials from "./spotify-credentials.json";
 
 // var uid = parseInt(process.env.SUDO_UID);
 // console.log(uid);

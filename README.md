@@ -6,10 +6,11 @@ Personal project :- a device built to show current playing song info from Spotif
 
 ## Features
 
-- Pi with Node script to handle everything
-- VFD Noritake Noritake Itron GU140X32F-7000 140x32
+- Pi with Node script to handle everything, including web flow OAuth2
+- VFD Noritake Noritake Itron GU140X32F-7000 (late 80s tech!)
+- Resin printed case
 
-If you want to do some hairbrained homebrew version, I'll ask questions best I can but wouldn't recommend it :D
+If you want to do some hairbrained homebrew version, I'll ask questions best I can but wouldn't recommend it ^\_- but at the very least, you'll want to edit `spotify-credentials.json`
 
 ## Dev
 

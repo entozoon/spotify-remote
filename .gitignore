@@ -1,3 +1,4 @@
 node_modules
 *.saved.json
 dist
+spotify-credentials.json
