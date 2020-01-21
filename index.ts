@@ -92,13 +92,20 @@ const loop = async () => {
     //   return console.error("Error::dry run", e);
     // })
     .then(async (_state: any) => {
+      let isNewSong = !state || !state.name || state.name != _state.name;
       state = _state; // global
-
+      // Only bother our arse with a full render if song has changed
+      if (!isNewSong) return state;
       playingNicely = true;
       clearInterval(progressUpdateInterval);
+      if (!state || !state.id) {
+        await vfd.clear();
+        await vfd.echo(`No song playing`, 30, 3, 1);
+        return state;
+      }
       const { id } = state;
-      spotify.audioFeatures(id).then(info => {
-        console.log(info);
+      spotify.audioFeatures(id).then((info: any) => {
+        console.log("audioFeatures", info);
         state.key = info.key;
         vfd.displaySongState(state);
         // This probably isn't all resolving and chaining in order tbh
@@ -110,33 +117,38 @@ const loop = async () => {
         "No joy with saved tokens. Await response from web server for user input.",
         e
       );
-      return;
+      return {};
     })
     .then(state => {
+      if (!state || !state.id) {
+        return {};
+      }
       const { id } = state;
-      spotify
-        .audioAnalysis(id)
-        .then(async (analysis: any) => {
-          // console.log(analysis);
-          const { volumeArray } = analysis;
-          if (volumeArray) {
-            await vfd.displayVolumeArray(analysis.volumeArray);
-          }
-        })
-        .then(() => {
-          let timeout = state.duration_ms - state.progress_ms;
-          clearInterval(loopTimeout);
-          loopTimeout = setTimeout(() => {
-            loop();
-          }, timeout || 10000);
+      spotify.audioAnalysis(id).then(async (analysis: any) => {
+        // console.log(analysis);
+        const { volumeArray } = analysis;
+        if (volumeArray) {
+          await vfd.displayVolumeArray(analysis.volumeArray);
+        }
+      });
+    })
+    .then(() => {
+      // Have a timeout fallback if no song playing
+      let timeout = state ? state.duration_ms - state.progress_ms : 10000;
+      // Retry every min of every ten seconds regardless.
+      // Rate limits are like, dozens a second so it should be fine(?)
+      timeout = timeout < 10000 ? timeout : 10000;
+      clearInterval(loopTimeout);
+      loopTimeout = setTimeout(() => {
+        loop();
+      }, timeout || 10000);
 
-          // 3:12 progress updater
-          // Have a breather before firing up the loop,
-          // so it can finish up drawing the volume array
-          progressUpdateInterval = setInterval(() => {
-            progressUpdate();
-          }, 100);
-        });
+      // 3:12 progress updater
+      // Have a breather before firing up the loop,
+      // so it can finish up drawing the volume array
+      progressUpdateInterval = setInterval(() => {
+        if (state) progressUpdate();
+      }, 100);
     })
     .catch(e => {
       console.log("Error::", e);

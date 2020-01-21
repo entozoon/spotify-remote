@@ -112,7 +112,7 @@ export default class Vdf {
   }
   // this.clear = () => {
   clear() {
-    console.log(":: clear");
+    // console.log(":: clear");
     return this.writeBytes([0x0c]);
   }
   // x (pixels), y (row)
@@ -360,7 +360,6 @@ export default class Vdf {
       // );
     } else {
       console.log("No song playing");
-      // Myke: there's a write mixture display mode. insert style and shit
       await this.echo(`No song playing`, 0, 0, 1);
     }
   };
@@ -399,7 +398,7 @@ export default class Vdf {
       x: 0,
       y: 3,
       width: Math.floor(progressFraction * 140) || 0,
-      height: 7,
+      height: 4,
       mode: "quartertone"
     });
   };
