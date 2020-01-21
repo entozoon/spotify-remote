@@ -75,6 +75,21 @@ Add
     sleep 10
     sudo iwconfig wlan0 power off
 
+### Set up Spotify
+
+Create an API client in the dashboard, with
+
+Website
+
+    https://example.com
+
+Redirect URIs
+
+    https://example.com
+    https://example.com/
+    https://querystrings.netlify.com
+    https://querystrings.netlify.com/
+
 ### THOUGHT PROCESS (for personal ref)
 
 Auth site with app that pings
