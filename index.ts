@@ -11,11 +11,6 @@ import { delay, msToTime } from "./utils";
 // var uid = parseInt(process.env.SUDO_UID);
 // console.log(uid);
 
-const spotifyCredentials = {
-  clientId: "3f8c992f08c04ffd975d95665dad1318",
-  clientSecret: "4d623279971343478816fa9c245a740c"
-};
-
 const spotify = new Spotify({ spotifyCredentials });
 const server = new Server({ spotifyCredentials, spotify });
 const vfd = new Vfd();

@@ -1,4 +1,15 @@
-# Spotify Remote
+# Spotify Remote Display
+
+![Spotify Remote](spotify-remote.jpg)
+
+Personal project :- a device built to show current playing song info from Spotify.
+
+## Features
+
+- Pi with Node script to handle everything
+- VFD Noritake Noritake Itron GU140X32F-7000 140x32
+
+If you want to do some hairbrained homebrew version, I'll ask questions best I can but wouldn't recommend it :D
 
 ## Dev
 
@@ -35,27 +46,24 @@ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 OR might be able to just save this as wpa_supplicant.conf in the boot dir too!
 Hotspot, Home, Work
 
-    country=US
-    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-    update_config=1
-    network={
-     ssid="Zyke"
-     scan_ssid=1
-     psk="bigboobs"
-     key_mgmt=WPA-PSK
-    }
-    network={
-     ssid="2Moe2Mansion"
-     scan_ssid=1
-     psk="bigboobs"
-     key_mgmt=WPA-PSK
-    }
-    network={
-     ssid="TechdeptFast"
-     scan_ssid=1
-     psk="techdept13ew"
-     key_mgmt=WPA-PSK
-    }
+```conf
+country=US
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+ ssid="wifiName1"
+ psk="wifiPass1"
+ key_mgmt=WPA-PSK
+}
+network={
+ ssid="wifiName2"
+ psk="wifiPass2"
+ key_mgmt=WPA-PSK
+ proto=RSN
+ pairwise=CCMP
+}
+```
 
 Disable WIFI power management from disabling it randomly
 
@@ -66,7 +74,7 @@ Add
     sleep 10
     sudo iwconfig wlan0 power off
 
-### Ideas
+### THOUGHT PROCESS (for personal ref)
 
 Auth site with app that pings
 Lambda function
