@@ -1,6 +1,7 @@
 //
 // https://forum.arduino.cc/index.php?topic=198201.0
 //
+import { delay } from "./utils";
 // import * as SerialPort from "serialport";
 const SerialPort = require("serialport");
 import {
@@ -69,22 +70,25 @@ export default class Vdf {
   disable() {
     this.disabled = true;
   }
-  writeBytes(byteArray) {
+  writeBytes = async byteArray => {
     if (this.disabled) return;
-    return new Promise((resolve, reject) => {
-      // Convert array of bytes to a buffer array (similar)
-      // let buffer = new Buffer(byteArray.length);
-      let buffer = Buffer.alloc(byteArray.length);
-      byteArray.forEach((b, i) => {
-        buffer[i] = b;
-      });
-      // console.log("Writing", JSON.stringify(byteArray));
-      // Write said buffer, resolving as appr
+    // Convert array of bytes to a buffer array (similar)
+    // let buffer = new Buffer(byteArray.length);
+    let buffer = Buffer.alloc(byteArray.length);
+    byteArray.forEach((b, i) => {
+      buffer[i] = b;
+    });
+    // console.log("Writing", JSON.stringify(byteArray));
+    // Write said buffer, resolving as appr
+    return new Promise(resolve => {
+      // Not sure if this is actually awaiting properly tbh
       this.serial.write(buffer, e => {
-        return e ? reject(e) : resolve();
+        // setTimeout(() => {
+        return resolve();
+        // }, 100);
       });
     });
-  }
+  };
   // this.resetVFD = this.writeBytes([
   resetVFD() {
     console.log(":: resetVFD");
@@ -106,7 +110,7 @@ export default class Vdf {
   }
   // normal, and, or, xor
   setMixtureMode(mode) {
-    console.log(":: setMixtureMode", mode);
+    // console.log(":: setMixtureMode", mode);
     const modeByte = ["normal", "and", "or", "xor"].indexOf(mode);
     return this.writeBytes([0x1f, 0x77, modeByte]);
   }
@@ -217,7 +221,7 @@ export default class Vdf {
     return this.drawBitmap({ bmp, x: 20, y: 0, mode: "halftone" });
   };
   // x (pixels), y (row)
-  drawBitmap = async ({ bmp, x, y, mode = "normal" }) => {
+  drawBitmap = async ({ bmp, x, y, mode = "normal", align = "top" }) => {
     // console.log(":: drawBitmap");
     //
     // HOW IT WORKS
@@ -235,7 +239,7 @@ export default class Vdf {
     const width = bmp[0].length;
     const height = Math.ceil(bmp.length / 8) * 8;
     const heightBits = Math.ceil(height / 8);
-    bmp = bmpFillToGivenDimensions({ bmp, width, height });
+    bmp = bmpFillToGivenDimensions({ bmp, width, height, align });
     // console.log({ x, y, width, height, heightBits });
     if (mode == "halftone") {
       for (let y = 0; y < height; y++) {
@@ -302,7 +306,8 @@ export default class Vdf {
     y, // row
     width,
     height,
-    mode = "normal"
+    mode = "normal",
+    align = "top"
   }) => {
     // Any x and width are fine, but y is an 8px row and height is rounded up to 8 pixels and blank the rest
     let bmp = [];
@@ -315,7 +320,7 @@ export default class Vdf {
         bmp[y][x] = mode === "invert" ? 0 : 1;
       }
     }
-    return this.drawBitmap({ bmp, x, y, mode });
+    return this.drawBitmap({ bmp, x, y, mode, align });
   };
   drawRectDotty = async (x1, y1, x2, y2) => {
     // You know what'd be sick
@@ -386,7 +391,7 @@ export default class Vdf {
   displayProgress = async ({ progress_ms, duration_ms, progressFraction }) => {
     const progressStore = `${msToTime(progress_ms)} / ${msToTime(
       duration_ms
-    )}      `;
+    )}         `;
     if (this.progressStore != progressStore) {
       this.progressStore = progressStore;
       await this.echo(progressStore, 0, 2, 1);
@@ -394,12 +399,27 @@ export default class Vdf {
     }
   };
   drawProgressLine = async ({ progressFraction }) => {
+    console.log("drawProgressLine");
+    // await this.setMixtureMode("and");
+    // Draw flat plain
     await this.drawRect({
       x: 0,
       y: 3,
       width: Math.floor(progressFraction * 140) || 0,
       height: 4,
-      mode: "quartertone"
+      align: "bottom"
     });
+    await this.setMixtureMode("xor");
+    await delay(300);
+    // Make flat plain noice and dotty
+    await this.drawRect({
+      x: 0,
+      y: 3,
+      width: Math.floor(progressFraction * 140) || 0,
+      height: 4,
+      mode: "halftone",
+      align: "bottom"
+    });
+    await this.setMixtureMode("normal");
   };
 }

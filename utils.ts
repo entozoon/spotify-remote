@@ -1,6 +1,7 @@
 const chunk = require("lodash.chunk");
 
-export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+export const delayP = ms => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = async ms => await delayP(ms);
 
 export const msToTime = ms => {
   // https://stackoverflow.com/a/37770048
@@ -8,8 +9,18 @@ export const msToTime = ms => {
   return (s - (s %= 60)) / 60 + (9 < s ? ":" : ":0") + s;
 };
 
-export const bmpFillToGivenDimensions = ({ bmp, width, height }) => {
+export const bmpFillToGivenDimensions = ({
+  bmp,
+  width,
+  height,
+  align = "top"
+}) => {
   // Force fill 0 values for whatever extra pixels we've added
+  if (align === "bottom") {
+    for (let y = bmp.length; y < height; y++) {
+      bmp.unshift(Array(width).fill(0));
+    }
+  }
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (!bmp[y]) {

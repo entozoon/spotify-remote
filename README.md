@@ -75,7 +75,20 @@ Add
     sleep 10
     sudo iwconfig wlan0 power off
 
-### Set up Spotify
+### Run on startup
+
+    sudo nano /etc/network/if-up.d/start-spotify
+
+```bash
+#!/bin/sh
+echo  !! Running spotify remote !!
+cd /home/pi/spotify-remote
+npm run start-pi &
+```
+
+    sudo chmod 755 /etc/network/if-up.d/start-spotify
+
+## Set up Spotify
 
 Create an API client in the dashboard, with
 
@@ -90,7 +103,7 @@ Redirect URIs
     https://querystrings.netlify.com
     https://querystrings.netlify.com/
 
-### THOUGHT PROCESS (for personal ref)
+## THOUGHT PROCESS (for personal ref)
 
 Auth site with app that pings
 Lambda function

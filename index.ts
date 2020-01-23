@@ -83,6 +83,8 @@ server.on("init", async ({ url, urlNgrok }) => {
 });
 
 const loop = async () => {
+  console.log("loop()");
+
   await spotify
     .currentPlaybackState()
     // .catch(e => {
