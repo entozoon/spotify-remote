@@ -84,7 +84,6 @@ server.on("init", async ({ url, urlNgrok }) => {
 
 const loop = async () => {
   console.log("loop()");
-
   await spotify
     .currentPlaybackState()
     // .catch(e => {
@@ -92,12 +91,17 @@ const loop = async () => {
     // })
     .then(async (_state: any) => {
       // This is an absolute ballachington
+      // console.log(state);
+      // console.log(typeof state);
+      // console.log(JSON.stringify(state));
       let isNewSong =
-        state != _state ||
+        (state && JSON.stringify(state) === "{}") ||
+        // state != _state ||
         // typeof state != typeof _state ||
-        JSON.stringify(state) != JSON.stringify(state) ||
+        // JSON.stringify(state) != JSON.stringify(state) ||
         (state && state.name && state.name != _state.name);
       state = _state; // global
+      state.isNewSong = isNewSong;
       // Only bother our arse with a full render if song has changed
       if (!isNewSong) return state;
       playingNicely = true;
@@ -108,11 +112,12 @@ const loop = async () => {
         return state;
       }
       const { id } = state;
-      spotify.audioFeatures(id).then((info: any) => {
-        console.log("audioFeatures", info);
+      await spotify.audioFeatures(id).then(async (info: any) => {
+        // console.log("audioFeatures", info);
         state.key = info.key;
-        vfd.displaySongState(state);
-        // This probably isn't all resolving and chaining in order tbh
+        if (isNewSong) {
+          await vfd.displaySongState(state);
+        }
       });
       return state;
     })
@@ -123,18 +128,20 @@ const loop = async () => {
       );
       return {};
     })
-    .then(state => {
+    .then(async state => {
       if (!state || !state.id || !playingNicely) {
         return {};
       }
-      const { id } = state;
-      spotify.audioAnalysis(id).then(async (analysis: any) => {
-        // console.log(analysis);
-        const { volumeArray } = analysis;
-        if (volumeArray) {
-          await vfd.displayVolumeArray(analysis.volumeArray);
-        }
-      });
+      const { id, isNewSong } = state;
+      if (isNewSong) {
+        await spotify.audioAnalysis(id).then(async (analysis: any) => {
+          // console.log(analysis);
+          const { volumeArray } = analysis;
+          if (volumeArray) {
+            await vfd.displayVolumeArray(analysis.volumeArray);
+          }
+        });
+      }
     })
     .then(() => {
       if (!state || !state.id || !playingNicely) {

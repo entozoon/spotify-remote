@@ -20,6 +20,7 @@ export default class Vdf {
   initialised = false;
   disabled = false;
   progressStore;
+  drawProgressLineFlop = false;
   constructor() {}
   init() {
     console.log(":: init");
@@ -337,9 +338,10 @@ export default class Vdf {
     // this.drawRectDotty(30 + fraction * 70, 3, 70 - fraction * 70);
   };
   displaySongState = async state => {
+    console.log("displaySongState");
     this.clear();
     if (state) {
-      console.log(state);
+      // console.log(state);
       let {
         name,
         artist,
@@ -399,27 +401,37 @@ export default class Vdf {
     }
   };
   drawProgressLine = async ({ progressFraction }) => {
-    console.log("drawProgressLine");
+    // // Draw flat plain
     // await this.setMixtureMode("and");
-    // Draw flat plain
+    // await this.drawRect({
+    //   x: 0,
+    //   y: 3,
+    //   width: Math.floor(progressFraction * 140) || 0,
+    //   height: 4,
+    //   align: "bottom"
+    // });
+    // await this.setMixtureMode("xor");
+    // // await delay(300);
+    // // Make flat plain noice and dotty
+    // await this.drawRect({
+    //   x: 0,
+    //   y: 3,
+    //   width: Math.floor(progressFraction * 140) || 0,
+    //   height: 4,
+    //   mode: "halftone",
+    //   align: "bottom"
+    // });
+    // await this.setMixtureMode("normal");
+    //
+    // Eerrrgh, the flashing is unbearable, so yeah
+    // If I want anything more complex, it needs muxing into the volume array data
+    // In fact, I probably should do that - and only re-render the modified part like
     await this.drawRect({
       x: 0,
       y: 3,
       width: Math.floor(progressFraction * 140) || 0,
-      height: 4,
-      align: "bottom"
+      height: 8,
+      mode: "halftone"
     });
-    await this.setMixtureMode("xor");
-    await delay(300);
-    // Make flat plain noice and dotty
-    await this.drawRect({
-      x: 0,
-      y: 3,
-      width: Math.floor(progressFraction * 140) || 0,
-      height: 4,
-      mode: "halftone",
-      align: "bottom"
-    });
-    await this.setMixtureMode("normal");
   };
 }
