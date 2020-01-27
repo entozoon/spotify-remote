@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "tsc -w && nodemon index",
-    "start-pi": "sudo killall node & sudo node ./dist/index",
-    "dev-pi": "sudo killall node & sudo npm run run-dist",
+    "start-pi": "sudo killall node; sudo node ./dist/index",
+    "dev-pi": "sudo killall node; sudo npm run run-dist",
     "run-dist": "nodemon -e *.js ./dist/index.js",
     "build": "tsc",
     "test-vfd": "nodemon -e *.js ./dist/test-vfd.js",

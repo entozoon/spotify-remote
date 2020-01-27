@@ -101,7 +101,6 @@ const loop = async () => {
         // JSON.stringify(state) != JSON.stringify(state) ||
         (state && state.name && state.name != _state.name);
       state = _state; // global
-      state.isNewSong = isNewSong;
       // Only bother our arse with a full render if song has changed
       if (!isNewSong) return state;
       playingNicely = true;
@@ -111,6 +110,7 @@ const loop = async () => {
         await vfd.echo(`No song playing`, 30, 3, 1);
         return state;
       }
+      state.isNewSong = isNewSong;
       const { id } = state;
       await spotify.audioFeatures(id).then(async (info: any) => {
         // console.log("audioFeatures", info);
@@ -153,9 +153,10 @@ const loop = async () => {
       // Rate limits are like, dozens a second so it should be fine(?)
       timeout = timeout < 10000 ? timeout : 10000;
       clearInterval(loopTimeout);
+      console.log("Setting loop timeout", timeout);
       loopTimeout = setTimeout(() => {
         loop();
-      }, timeout || 10000);
+      }, timeout);
 
       // 3:12 progress updater
       // Have a breather before firing up the loop,
